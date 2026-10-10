@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* Varsity design tokens. Use these (bg-bg, text-acc, border-line…) instead of raw hex values. */
+@theme {
+  --color-bg: #0d1d15; /* app background */
+  --color-fg: #f3ead6; /* text (cream) */
+  --color-mut: #8ea595; /* secondary text, labels */
+  --color-edge: #2a4a3a; /* borders, inactive controls */
+  --color-line: #1d362a; /* hairline row dividers */
+  --color-acc: #f3b62b; /* varsity gold */
+  --color-on-acc: #1b1403; /* text on gold */
+  --color-hl: #15291f; /* selected row / option background */
+}
+
+/* "inline" because the font variables are set by next/font on <html> at runtime. */
+@theme inline {
+  --font-display: var(--font-graduate), Georgia, serif;
+  --font-body: var(--font-saira-condensed), "Arial Narrow", sans-serif;
+}
+
+@layer base {
+  /* Varsity is all caps, slightly spaced out. */
+  body {
+    @apply bg-bg font-body text-fg uppercase tracking-[0.05em];
+  }
+}
