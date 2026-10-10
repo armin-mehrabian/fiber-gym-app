@@ -1,0 +1,20 @@
+# Safe defaults for local Docker only. Real values come from environment variables.
+server:
+  port: 8080
+
+spring:
+  application:
+    name: fiber-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/fiber}
+    username: ${DB_USER:fiber}
+    password: ${DB_PASSWORD:fiber}
+    hikari:
+      # Give up on a DB connection after 5 s (value in ms), so /api/health answers 503 quickly when the DB is down.
+      connection-timeout: 5000
+  jpa:
+    hibernate:
+      # Flyway owns the schema (db/migration). Hibernate only checks that entities match it.
+      ddl-auto: validate
+    # Don't keep a DB connection open while the HTTP response is rendered.
+    open-in-view: false

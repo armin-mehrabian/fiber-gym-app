@@ -1,0 +1,5 @@
+# Build output and IDE files never go into the image build context.
+target/
+.idea/
+*.iml
+.vscode/
