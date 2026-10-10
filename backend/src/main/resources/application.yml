@@ -18,3 +18,9 @@ spring:
       ddl-auto: validate
     # Don't keep a DB connection open while the HTTP response is rendered.
     open-in-view: false
+
+fiber:
+  # Folder with regions.json, equipment.json and exercises.json, loaded at startup (catalog/SeedLoader).
+  # The default works when running ./mvnw from backend/. In Docker, compose mounts the data
+  # folder at /app/data and sets SEED_DIR=/app/data.
+  seed-dir: ${SEED_DIR:../data}

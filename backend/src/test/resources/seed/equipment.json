@@ -1,0 +1,5 @@
+[
+  { "id": "barbell", "name": "Barbell" },
+  { "id": "bench", "name": "Bench" },
+  { "id": "cables", "name": "Cables" }
+]

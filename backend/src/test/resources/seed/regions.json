@@ -1,0 +1,8 @@
+[
+  { "id": "lats_lower", "name": "Lower lats", "group": "back", "view": "back", "order": 100 },
+  { "id": "chest_upper", "name": "Upper chest", "group": "chest", "view": "front", "order": 10 },
+  { "id": "biceps_long", "name": "Biceps, long head", "group": "arms", "view": "front", "order": 120 },
+  { "id": "delt_front", "name": "Front delts", "group": "shoulders", "view": "front", "order": 40 },
+  { "id": "chest_mid", "name": "Mid chest", "group": "chest", "view": "front", "order": 20 },
+  { "id": "lats_upper", "name": "Upper lats", "group": "back", "view": "back", "order": 90 }
+]

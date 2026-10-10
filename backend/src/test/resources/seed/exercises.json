@@ -1,0 +1,54 @@
+[
+  {
+    "id": "single_arm_cable_row",
+    "name": "Single-arm cable row",
+    "equipment": ["cables"],
+    "pattern": "horizontal_pull",
+    "primary": ["lats_lower"],
+    "secondary": ["lats_upper", "biceps_long"],
+    "repRange": [10, 12],
+    "cue": "Drive the elbow toward your hip, not straight back.",
+    "note": "Upper vs lower lat emphasis is weak evidence."
+  },
+  {
+    "id": "incline_barbell_press",
+    "name": "Incline barbell press",
+    "equipment": ["barbell", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_upper", "chest_mid"],
+    "secondary": ["delt_front"],
+    "repRange": [6, 10],
+    "cue": "Lower the bar to your upper chest."
+  },
+  {
+    "id": "push_up",
+    "name": "Push-up",
+    "equipment": [],
+    "pattern": "horizontal_push",
+    "primary": ["chest_mid"],
+    "secondary": ["delt_front"],
+    "repRange": [8, 20],
+    "cue": "Keep your body in one straight line."
+  },
+  {
+    "id": "barbell_floor_press",
+    "name": "Barbell floor press",
+    "equipment": ["barbell"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_mid"],
+    "secondary": ["delt_front"],
+    "repRange": [6, 10],
+    "cue": "Pause with your elbows on the floor.",
+    "retired": true
+  },
+  {
+    "id": "cable_fly",
+    "name": "Cable fly",
+    "equipment": ["cables"],
+    "pattern": "fly",
+    "primary": ["chest_mid"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Hug a big tree; keep a soft bend in the elbows."
+  }
+]

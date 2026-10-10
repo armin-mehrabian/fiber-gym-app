@@ -1,0 +1,6 @@
+# Tests only. Spring Boot reads config/application.yml on top of application.yml,
+# so EVERY Spring test (full app and @WebMvcTest alike) uses the small fixture set below,
+# never the real ../data folder (which can change at any time).
+# The path is relative to backend/, where Maven runs the tests.
+fiber:
+  seed-dir: src/test/resources/seed
