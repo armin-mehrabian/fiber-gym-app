@@ -59,3 +59,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose build
+
+  e2e:
+    name: Browser tests (Cypress)
+    runs-on: ubuntu-latest
+    # Only spend minutes on browser tests when the faster checks pass.
+    needs: [backend, frontend, data]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the app (database, backend, frontend)
+        run: docker compose up --build -d
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+      - name: Run the browser tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: e2e
+          wait-on: "http://localhost:8080/api/health, http://localhost:3000/login"
+          wait-on-timeout: 180
+      - name: Keep screenshots of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: e2e/cypress/screenshots
+      - name: Show the app logs when something failed
+        if: failure()
+        run: docker compose logs --no-color --tail 200
