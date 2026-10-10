@@ -9,6 +9,10 @@ const NAV_ITEMS = [
   { href: "/settings", label: "Settings", testId: "nav-settings" },
 ];
 
+// Login and onboarding are full-screen steps before the app itself, so they get no tabs.
+// The nav already knows the current path, so hiding it here is simpler than a second layout.
+const HIDDEN_ON = ["/login", "/onboarding"];
+
 // "/" would match every path with startsWith, so Home only matches exactly.
 function isActive(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -16,6 +20,9 @@ function isActive(pathname: string, href: string): boolean {
 
 export default function BottomNav() {
   const pathname = usePathname();
+  if (HIDDEN_ON.includes(pathname)) {
+    return null;
+  }
 
   return (
     <nav className="grid grid-cols-3 border-t-[3px] border-double border-acc">
