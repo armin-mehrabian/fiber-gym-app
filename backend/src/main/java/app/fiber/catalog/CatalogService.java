@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Reads the exercise catalog (regions and exercises) and turns it into API responses.
+ * Reads the exercise catalog (regions, equipment and exercises) and turns it into API responses.
  */
 @Service
 @Transactional(readOnly = true)
@@ -18,10 +18,13 @@ public class CatalogService {
 		Comparator.comparing(Exercise::getName, String.CASE_INSENSITIVE_ORDER);
 
 	private final RegionRepository regionRepository;
+	private final EquipmentRepository equipmentRepository;
 	private final ExerciseRepository exerciseRepository;
 
-	public CatalogService(RegionRepository regionRepository, ExerciseRepository exerciseRepository) {
+	public CatalogService(RegionRepository regionRepository, EquipmentRepository equipmentRepository,
+			ExerciseRepository exerciseRepository) {
 		this.regionRepository = regionRepository;
+		this.equipmentRepository = equipmentRepository;
 		this.exerciseRepository = exerciseRepository;
 	}
 
@@ -29,6 +32,13 @@ public class CatalogService {
 	public List<RegionResponse> listRegions() {
 		return regionRepository.findAllByOrderBySortOrderAsc().stream()
 			.map(RegionResponse::from)
+			.toList();
+	}
+
+	/** All equipment, in the same order as the seed file equipment.json. */
+	public List<EquipmentResponse> listEquipment() {
+		return equipmentRepository.findAllByOrderByPositionAscIdAsc().stream()
+			.map(EquipmentResponse::from)
 			.toList();
 	}
 

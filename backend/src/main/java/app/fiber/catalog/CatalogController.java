@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Public, read-only catalog: muscle regions and the exercise library.
+ * Public, read-only catalog: muscle regions, gym equipment and the exercise library.
  */
 @RestController
 @RequestMapping("/api")
@@ -23,6 +23,12 @@ public class CatalogController {
 	@GetMapping("/regions")
 	public List<RegionResponse> regions() {
 		return catalogService.listRegions();
+	}
+
+	/** In the same order as the seed file, so screens can show it as is. */
+	@GetMapping("/equipment")
+	public List<EquipmentResponse> equipment() {
+		return catalogService.listEquipment();
 	}
 
 	/** ?q= filters by name (ignoring case); ?all=true also shows retired exercises. */

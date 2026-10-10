@@ -8,8 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import app.fiber.TestcontainersConfiguration;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
@@ -27,6 +32,43 @@ class CatalogIntegrationTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
+	private SeedLoader seedLoader;
+
+	@Value("${fiber.seed-dir}")
+	private String fixtureDir;
+
+	@TempDir
+	private Path tempDir;
+
+	// The fixture lists cables before barbell on purpose: the API must keep the file order,
+	// not sort by id or name. No login is sent, so this also proves the endpoint is public.
+	@Test
+	void equipmentIsPublicAndKeepsTheOrderFromTheSeedFile() throws Exception {
+		mockMvc.perform(get("/api/equipment"))
+			.andExpect(status().isOk())
+			.andExpect(content().json("""
+				[{ "id": "cables", "name": "Cables" }, { "id": "barbell", "name": "Barbell" },
+				 { "id": "bench", "name": "Bench" }]""", JsonCompareMode.STRICT));
+	}
+
+	@Test
+	void reloadingWithAReorderedEquipmentFileUpdatesTheOrder() throws Exception {
+		Path reordered = fixtureCopyWithEquipment("""
+			[{ "id": "bench", "name": "Bench" }, { "id": "cables", "name": "Cables" },
+			 { "id": "barbell", "name": "Barbell" }]""");
+		try {
+			seedLoader.load(reordered);
+
+			mockMvc.perform(get("/api/equipment"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$[*].id").value(contains("bench", "cables", "barbell")));
+		} finally {
+			// Other tests share this database, so put the fixture order back.
+			seedLoader.load(Path.of(fixtureDir));
+		}
+	}
 
 	@Test
 	void regionsAreSortedByOrder() throws Exception {
@@ -131,6 +173,14 @@ class CatalogIntegrationTest {
 			.andExpect(status().isNotFound())
 			.andExpect(content().json("""
 				{ "error": "Exercise not found: does_not_exist" }""", JsonCompareMode.STRICT));
+	}
+
+	/** A temp seed folder with the fixture's regions and exercises, and the given equipment.json. */
+	private Path fixtureCopyWithEquipment(String equipmentJson) throws IOException {
+		Files.copy(Path.of(fixtureDir, "regions.json"), tempDir.resolve("regions.json"));
+		Files.copy(Path.of(fixtureDir, "exercises.json"), tempDir.resolve("exercises.json"));
+		Files.writeString(tempDir.resolve("equipment.json"), equipmentJson);
+		return tempDir;
 	}
 
 }

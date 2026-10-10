@@ -1,5 +1,5 @@
 [
+  { "id": "cables", "name": "Cables" },
   { "id": "barbell", "name": "Barbell" },
-  { "id": "bench", "name": "Bench" },
-  { "id": "cables", "name": "Cables" }
+  { "id": "bench", "name": "Bench" }
 ]

@@ -16,7 +16,7 @@ import org.springframework.security.web.csrf.CsrfException;
  * Who may call what, and how logins and CSRF tokens work.
  *
  * Public (no login): the health check, getting a CSRF token, signup, login, reading the catalog
- * (regions, exercise list, one exercise) and Spring's /error page. Everything else needs a login.
+ * (regions, equipment, exercise list, one exercise) and Spring's /error page. Everything else needs a login.
  *
  * Login: a server-side session, identified by the JSESSIONID cookie (httpOnly, SameSite=Lax;
  * set in application.yml). AuthController starts and ends sessions.
@@ -41,7 +41,8 @@ public class SecurityConfig {
 				.requestMatchers(HttpMethod.POST, "/api/auth/signup", "/api/auth/login").permitAll()
 				// "/api/exercises/*" matches one path segment only, so a user's
 				// /api/exercises/{id}/history (Phase 10) still needs a login.
-				.requestMatchers(HttpMethod.GET, "/api/regions", "/api/exercises", "/api/exercises/*").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/regions", "/api/equipment", "/api/exercises", "/api/exercises/*")
+					.permitAll()
 				// Spring renders error responses (e.g. 400 for a bad ?all= value) on /error. Without this,
 				// a caller who isn't logged in would get 401 there instead of the real error status.
 				.requestMatchers("/error").permitAll()

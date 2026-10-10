@@ -17,8 +17,21 @@ import org.junit.jupiter.api.Test;
 class CatalogServiceTest {
 
 	private final RegionRepository regionRepository = mock(RegionRepository.class);
+	private final EquipmentRepository equipmentRepository = mock(EquipmentRepository.class);
 	private final ExerciseRepository exerciseRepository = mock(ExerciseRepository.class);
-	private final CatalogService catalogService = new CatalogService(regionRepository, exerciseRepository);
+	private final CatalogService catalogService =
+		new CatalogService(regionRepository, equipmentRepository, exerciseRepository);
+
+	@Test
+	void equipmentKeepsTheRepositoryOrderAndMapsIdAndName() {
+		when(equipmentRepository.findAllByOrderByPositionAscIdAsc()).thenReturn(List.of(
+			new Equipment("cables", "Cable station", 0),
+			new Equipment("barbell", "Barbell", 1)));
+
+		assertThat(catalogService.listEquipment()).containsExactly(
+			new EquipmentResponse("cables", "Cable station"),
+			new EquipmentResponse("barbell", "Barbell"));
+	}
 
 	@Test
 	void exercisesAreSortedByNameIgnoringCaseAndRetiredOnesAreHidden() {

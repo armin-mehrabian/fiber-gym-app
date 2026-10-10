@@ -51,6 +51,18 @@ class CatalogControllerTest {
 	}
 
 	@Test
+	void equipmentHasTheContractShapeAndKeepsTheServiceOrder() throws Exception {
+		when(catalogService.listEquipment()).thenReturn(List.of(
+			new EquipmentResponse("cables", "Cable station"), new EquipmentResponse("barbell", "Barbell")));
+
+		mockMvc.perform(get("/api/equipment"))
+			.andExpect(status().isOk())
+			.andExpect(content().json("""
+				[{ "id": "cables", "name": "Cable station" }, { "id": "barbell", "name": "Barbell" }]""",
+				JsonCompareMode.STRICT));
+	}
+
+	@Test
 	void exercisesHaveTheContractShape() throws Exception {
 		when(catalogService.listExercises(null, false)).thenReturn(List.of(ROW));
 

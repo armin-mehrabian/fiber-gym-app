@@ -2,6 +2,7 @@ package app.fiber.catalog;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,6 +28,7 @@ import tools.jackson.databind.json.JsonMapper;
  * - Broken references or mappings (unknown id, no primary region, a region listed twice)
  *   stop the app with a clear message.
  * - The order of each exercise's primary and secondary lists is kept (first primary = main region).
+ * - The order of equipment.json is kept, so the equipment list shows it in the same order.
  * - If the folder doesn't exist, we log a warning and skip, so the app still starts without data.
  */
 @Component
@@ -161,7 +163,7 @@ public class SeedLoader implements ApplicationRunner {
 		// It updates the row if the id exists and inserts it otherwise. For an exercise, merging also
 		// replaces its equipment and region links with exactly the ones from the file.
 		regionRepository.saveAll(regions.stream().map(SeedLoader::toRegion).toList());
-		equipmentRepository.saveAll(equipment.stream().map(SeedLoader::toEquipment).toList());
+		equipmentRepository.saveAll(toEquipment(equipment));
 		exerciseRepository.saveAll(exercises.stream().map(SeedLoader::toExercise).toList());
 	}
 
@@ -169,8 +171,14 @@ public class SeedLoader implements ApplicationRunner {
 		return new Region(seed.id(), seed.name(), seed.group(), seed.view(), seed.order());
 	}
 
-	private static Equipment toEquipment(SeedEquipment seed) {
-		return new Equipment(seed.id(), seed.name());
+	/** Stores each item's index in the file as its position (0 = first), so the file order survives. */
+	private static List<Equipment> toEquipment(List<SeedEquipment> seeds) {
+		List<Equipment> equipment = new ArrayList<>();
+		for (int position = 0; position < seeds.size(); position++) {
+			SeedEquipment seed = seeds.get(position);
+			equipment.add(new Equipment(seed.id(), seed.name(), position));
+		}
+		return equipment;
 	}
 
 	private static Exercise toExercise(SeedExercise seed) {
