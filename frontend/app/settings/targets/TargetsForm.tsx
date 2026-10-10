@@ -71,6 +71,7 @@ export default function TargetsForm({ initialTargets, regions }: TargetsFormProp
                   max={MAX_WEEKLY_SETS}
                   onChange={(value) => setEdited({ ...edited, [region.id]: value })}
                   label={region.name}
+                  actionWords={{ dec: "Fewer sets", inc: "More sets" }}
                   testIds={{
                     dec: `target-dec-${region.id}`,
                     value: `target-value-${region.id}`,

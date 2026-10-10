@@ -9,12 +9,18 @@ import type {
   ApiError,
   ApiResult,
   Equipment,
+  Exercise,
   Health,
+  HistoryWeek,
   Region,
+  Session,
+  SetChanges,
+  SetValues,
   Settings,
   SettingsUpdate,
   Target,
   User,
+  WorkoutSet,
 } from "@/lib/types";
 
 // A server has no page origin to resolve "/api" against, so server code calls the backend directly.
@@ -96,6 +102,53 @@ export function getRegions(): Promise<Region[]> {
 export async function getEquipment(): Promise<Equipment[] | null> {
   try {
     return await serverGetJson<Equipment[]>("/api/equipment");
+  } catch {
+    return null;
+  }
+}
+
+// The workout in progress, or null when there is none (the backend answers 204).
+export async function getActiveSession(): Promise<Session | null> {
+  const response = await serverGet("/api/sessions/active");
+  if (response.status === 204) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`GET /api/sessions/active failed with status ${response.status}`);
+  }
+  return (await response.json()) as Session;
+}
+
+// One of the user's workouts, or null if it doesn't exist (or belongs to someone else: also 404).
+// A malformed id gives 400, which means the same thing to the visitor.
+export async function getSession(id: string): Promise<Session | null> {
+  const path = `/api/sessions/${encodeURIComponent(id)}`;
+  const response = await serverGet(path);
+  if (response.status === 404 || response.status === 400) {
+    return null;
+  }
+  if (!response.ok) {
+    throw new Error(`GET ${path} failed with status ${response.status}`);
+  }
+  return (await response.json()) as Session;
+}
+
+// Finished workouts grouped by week, newest first.
+export function getHistory(weeks = 12): Promise<HistoryWeek[]> {
+  return serverGetJson<HistoryWeek[]>(`/api/history?weeks=${weeks}`);
+}
+
+// Exercises the user's equipment allows, optionally filtered by name.
+export function getMyExercises(query: string): Promise<Exercise[]> {
+  const q = query.trim();
+  const search = q ? `&q=${encodeURIComponent(q)}` : "";
+  return serverGetJson<Exercise[]>(`/api/exercises?mine=true${search}`);
+}
+
+// One catalog exercise. Only used for a nicer default weight, so a failure gives null instead of an error page.
+export async function getExercise(id: string): Promise<Exercise | null> {
+  try {
+    return await serverGetJson<Exercise>(`/api/exercises/${encodeURIComponent(id)}`);
   } catch {
     return null;
   }
@@ -200,4 +253,43 @@ export function saveSettings(update: SettingsUpdate): Promise<ApiResult<Settings
 // Sends only the changed rows; the reply is the full list.
 export function saveTargets(changes: Target[]): Promise<ApiResult<Target[]>> {
   return send<Target[]>("PUT", "/api/targets", changes);
+}
+
+// ---------------------------------------------------------------- workout (browser)
+
+// Starts an empty workout. 409 if one is already in progress.
+export function startSession(): Promise<ApiResult<Session>> {
+  return send<Session>("POST", "/api/sessions", {});
+}
+
+export function addExercise(sessionId: string, exerciseId: string): Promise<ApiResult<Session>> {
+  return send<Session>("POST", `/api/sessions/${sessionId}/exercises`, { exerciseId });
+}
+
+// The reply is the whole workout, because the later exercises move up one position.
+export function removeExercise(sessionId: string, position: number): Promise<ApiResult<Session>> {
+  return send<Session>("DELETE", `/api/sessions/${sessionId}/exercises/${position}`);
+}
+
+export function addSet(sessionId: string, position: number, values: SetValues): Promise<ApiResult<WorkoutSet>> {
+  return send<WorkoutSet>("POST", `/api/sessions/${sessionId}/exercises/${position}/sets`, values);
+}
+
+// Only the fields that are sent change.
+export function updateSet(setId: string, changes: SetChanges): Promise<ApiResult<WorkoutSet>> {
+  return send<WorkoutSet>("PATCH", `/api/sets/${setId}`, changes);
+}
+
+// The backend renumbers the remaining sets of that exercise 1..n.
+export function deleteSet(setId: string): Promise<ApiResult<null>> {
+  return send<null>("DELETE", `/api/sets/${setId}`);
+}
+
+export function finishSession(sessionId: string): Promise<ApiResult<Session>> {
+  return send<Session>("POST", `/api/sessions/${sessionId}/finish`);
+}
+
+// Deletes the workout and all its sets (only allowed while it's in progress).
+export function discardSession(sessionId: string): Promise<ApiResult<null>> {
+  return send<null>("DELETE", `/api/sessions/${sessionId}`);
 }

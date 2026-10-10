@@ -65,6 +65,77 @@ export type Equipment = {
   name: string;
 };
 
+// GET /api/exercises (and ?mine=true: only exercises the user's equipment allows).
+export type Exercise = {
+  id: string;
+  name: string;
+  equipment: string[]; // equipment ids; empty = bodyweight
+  pattern: string;
+  primary: string[]; // region ids, main region first
+  secondary: string[]; // region ids
+  repRange: [number, number]; // [low, high]
+  cue: string;
+};
+
+// One logged set. Weights are always kg in the API.
+export type WorkoutSet = {
+  id: string;
+  setNumber: number; // 1..n within its exercise
+  weightKg: number; // 0 = bodyweight
+  reps: number;
+  isWarmup: boolean;
+  completed: boolean;
+};
+
+// One exercise inside a workout.
+export type SessionExercise = {
+  position: number; // starts at 1
+  exerciseId: string;
+  name: string;
+  primary: string[]; // region ids, main region first
+  secondary: string[];
+  targetSets: number;
+  repRange: [number, number];
+  suggestedWeightKg: number | null;
+  sets: WorkoutSet[];
+};
+
+export type SessionStatus = "ACTIVE" | "FINISHED";
+
+// A workout: the one in progress (ACTIVE) or a past one (FINISHED).
+export type Session = {
+  id: string;
+  name: string;
+  status: SessionStatus;
+  startedAt: string; // ISO timestamp
+  finishedAt: string | null;
+  exercises: SessionExercise[];
+};
+
+// Body of POST .../sets and the fields PATCH /api/sets/{id} may change.
+export type SetValues = {
+  weightKg: number;
+  reps: number;
+  isWarmup: boolean;
+};
+export type SetChanges = Partial<SetValues & { completed: boolean }>;
+
+// One finished workout in GET /api/history.
+export type HistorySession = {
+  id: string;
+  name: string;
+  startedAt: string;
+  finishedAt: string;
+  exerciseCount: number;
+  workingSets: number; // completed sets that aren't warm-ups
+};
+
+// One Monday–Sunday week of GET /api/history.
+export type HistoryWeek = {
+  weekStart: string; // "YYYY-MM-DD", a Monday
+  sessions: HistorySession[];
+};
+
 // A failed request: the backend's { error, fields } reply plus the HTTP status.
 // status 0 means the backend couldn't be reached at all.
 export type ApiError = {
