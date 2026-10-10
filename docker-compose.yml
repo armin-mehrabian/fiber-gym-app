@@ -1,0 +1,50 @@
+# Fiber local development stack: Postgres + Spring Boot backend + Next.js frontend.
+# Start everything:  docker compose up --build
+# Then open:         http://localhost:3000
+# Values come from .env if present (copy .env.example), otherwise the local defaults below.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fiber}
+      POSTGRES_USER: ${POSTGRES_USER:-fiber}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fiber}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data # keeps your data between restarts
+    healthcheck:
+      # The backend waits until Postgres actually accepts connections.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-fiber} # "db" is the service name above
+      DB_USER: ${POSTGRES_USER:-fiber}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-fiber}
+      TZ: UTC
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://backend:8080 # Next.js reads the proxy target at build time
+    environment:
+      BACKEND_URL: http://backend:8080 # used by server components at runtime
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
