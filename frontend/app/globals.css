@@ -10,6 +10,15 @@
   --color-acc: #f3b62b; /* varsity gold */
   --color-on-acc: #1b1403; /* text on gold */
   --color-hl: #15291f; /* selected row / option background */
+
+  /* Marching dashed outline for today's planned regions on the body figure. */
+  --animate-march: march 1.4s linear infinite;
+  @keyframes march {
+    /* 32 = two full dash cycles (10 dash + 6 gap), so the loop has no visible jump. */
+    to {
+      stroke-dashoffset: -32;
+    }
+  }
 }
 
 /* "inline" because the font variables are set by next/font on <html> at runtime. */
