@@ -1,0 +1,39 @@
+# --- Environment and secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- OS and editors ---
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Frontend (Next.js / Node) ---
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Backend (Java / Maven) ---
+target/
+*.class
+hs_err_pid*
+!.mvn/wrapper/maven-wrapper.jar
+
+# --- End-to-end tests (Cypress) ---
+e2e/cypress/videos/
+e2e/cypress/screenshots/
+e2e/cypress/downloads/
+
+# --- Local database data ---
+pgdata/
