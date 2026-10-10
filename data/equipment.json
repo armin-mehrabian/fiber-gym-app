@@ -1,0 +1,11 @@
+[
+  { "id": "barbell", "name": "Barbell" },
+  { "id": "dumbbells", "name": "Dumbbells" },
+  { "id": "cables", "name": "Cable station" },
+  { "id": "machines", "name": "Machines" },
+  { "id": "bench", "name": "Bench" },
+  { "id": "pullup_bar", "name": "Pull-up bar" },
+  { "id": "dip_station", "name": "Dip station" },
+  { "id": "kettlebells", "name": "Kettlebells" },
+  { "id": "bands", "name": "Resistance bands" }
+]

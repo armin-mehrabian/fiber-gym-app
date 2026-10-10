@@ -1,0 +1,781 @@
+[
+  {
+    "id": "back_extension",
+    "name": "45-degree back extension",
+    "equipment": ["machines"],
+    "pattern": "hinge",
+    "primary": ["lower_back"],
+    "secondary": ["glutes", "hamstrings"],
+    "repRange": [10, 15],
+    "cue": "Lower under control and rise until your body is in a straight line, without over-arching."
+  },
+  {
+    "id": "banded_lateral_walk",
+    "name": "Banded lateral walk",
+    "equipment": ["bands"],
+    "pattern": "hip_abduction",
+    "primary": ["glute_med"],
+    "secondary": ["glutes"],
+    "repRange": [15, 20],
+    "cue": "Keep tension on the band and push your knees out with each small side step."
+  },
+  {
+    "id": "barbell_back_squat",
+    "name": "Barbell back squat",
+    "equipment": ["barbell"],
+    "pattern": "squat",
+    "primary": ["quads_vasti", "glutes"],
+    "secondary": ["adductors", "lower_back"],
+    "repRange": [6, 10],
+    "cue": "Sit down between your heels and drive up through your whole foot."
+  },
+  {
+    "id": "barbell_bench_press",
+    "name": "Barbell bench press",
+    "equipment": ["barbell", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_mid"],
+    "secondary": ["chest_upper", "delt_front", "triceps_lateral"],
+    "repRange": [6, 10],
+    "cue": "Pin your shoulder blades back and lower the bar to mid-chest."
+  },
+  {
+    "id": "barbell_curl",
+    "name": "Barbell curl",
+    "equipment": ["barbell"],
+    "pattern": "elbow_flexion",
+    "primary": ["biceps_short", "biceps_long"],
+    "secondary": ["forearms"],
+    "repRange": [8, 12],
+    "cue": "Keep your elbows at your sides and curl without swinging your body.",
+    "note": "Hits both heads; a slightly wider grip may favour the short head, but evidence is limited."
+  },
+  {
+    "id": "barbell_hip_thrust",
+    "name": "Barbell hip thrust",
+    "equipment": ["barbell", "bench"],
+    "pattern": "hinge",
+    "primary": ["glutes"],
+    "secondary": ["hamstrings"],
+    "repRange": [8, 12],
+    "cue": "Tuck your chin, drive through your heels and squeeze your glutes hard at the top."
+  },
+  {
+    "id": "barbell_overhead_press",
+    "name": "Barbell overhead press",
+    "equipment": ["barbell"],
+    "pattern": "vertical_push",
+    "primary": ["delt_front"],
+    "secondary": ["delt_side", "triceps_lateral", "traps_upper"],
+    "repRange": [6, 10],
+    "cue": "Squeeze your glutes and press the bar straight up, moving your head through at the top."
+  },
+  {
+    "id": "barbell_reverse_curl",
+    "name": "Barbell reverse curl",
+    "equipment": ["barbell"],
+    "pattern": "elbow_flexion",
+    "primary": ["forearms"],
+    "secondary": ["biceps_long"],
+    "repRange": [10, 15],
+    "cue": "Curl with an overhand grip and keep your wrists straight."
+  },
+  {
+    "id": "barbell_row",
+    "name": "Barbell row",
+    "equipment": ["barbell"],
+    "pattern": "horizontal_pull",
+    "primary": ["traps_mid", "lats_lower"],
+    "secondary": ["delt_rear", "biceps_long", "lower_back"],
+    "repRange": [8, 12],
+    "cue": "Hinge to about 45 degrees and pull the bar to your lower ribs.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "barbell_shrug",
+    "name": "Barbell shrug",
+    "equipment": ["barbell"],
+    "pattern": "shrug",
+    "primary": ["traps_upper"],
+    "secondary": ["forearms"],
+    "repRange": [10, 15],
+    "cue": "Lift your shoulders straight up toward your ears, pause, then lower slowly."
+  },
+  {
+    "id": "bayesian_cable_curl",
+    "name": "Bayesian cable curl",
+    "equipment": ["cables"],
+    "pattern": "elbow_flexion",
+    "primary": ["biceps_long"],
+    "secondary": ["forearms"],
+    "repRange": [10, 15],
+    "cue": "Face away from the cable and keep your arm slightly behind your body as you curl.",
+    "note": "Arm behind the body stretches the long head; head-level evidence is limited."
+  },
+  {
+    "id": "bent_over_dumbbell_reverse_fly",
+    "name": "Bent-over dumbbell reverse fly",
+    "equipment": ["dumbbells"],
+    "pattern": "rear_delt",
+    "primary": ["delt_rear"],
+    "secondary": ["traps_mid"],
+    "repRange": [12, 20],
+    "cue": "Hinge forward and raise the dumbbells out wide without shrugging."
+  },
+  {
+    "id": "bulgarian_split_squat",
+    "name": "Bulgarian split squat",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "lunge",
+    "primary": ["quads_vasti", "glutes"],
+    "secondary": ["adductors", "glute_med"],
+    "repRange": [8, 12],
+    "cue": "Rest your back foot on the bench and lower until the back knee nearly touches the floor."
+  },
+  {
+    "id": "cable_crunch",
+    "name": "Cable crunch",
+    "equipment": ["cables"],
+    "pattern": "core_flexion",
+    "primary": ["abs_upper"],
+    "secondary": ["abs_lower"],
+    "repRange": [10, 15],
+    "cue": "Kneel, hold the rope by your head and curl your ribs toward your hips.",
+    "note": "Upper vs lower abs evidence is limited; the whole rectus abdominis works."
+  },
+  {
+    "id": "cable_hip_abduction",
+    "name": "Cable hip abduction",
+    "equipment": ["cables"],
+    "pattern": "hip_abduction",
+    "primary": ["glute_med"],
+    "secondary": [],
+    "repRange": [12, 15],
+    "cue": "Stand tall and sweep the working leg out to the side without leaning."
+  },
+  {
+    "id": "cable_lateral_raise",
+    "name": "Cable lateral raise",
+    "equipment": ["cables"],
+    "pattern": "lateral_raise",
+    "primary": ["delt_side"],
+    "secondary": ["traps_upper"],
+    "repRange": [12, 20],
+    "cue": "Start with the cable across your body and raise your arm out to shoulder height."
+  },
+  {
+    "id": "cable_woodchop",
+    "name": "Cable woodchop",
+    "equipment": ["cables"],
+    "pattern": "core_rotation",
+    "primary": ["obliques"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Rotate from your trunk, not your arms, moving the handle diagonally across your body."
+  },
+  {
+    "id": "chest_dip",
+    "name": "Chest dip",
+    "equipment": ["dip_station"],
+    "pattern": "vertical_push",
+    "primary": ["chest_lower"],
+    "secondary": ["triceps_lateral", "delt_front"],
+    "repRange": [6, 12],
+    "cue": "Lean your torso forward and let your elbows drift slightly out as you lower."
+  },
+  {
+    "id": "chest_supported_dumbbell_row",
+    "name": "Chest-supported dumbbell row",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "horizontal_pull",
+    "primary": ["traps_mid"],
+    "secondary": ["delt_rear", "lats_upper", "biceps_long"],
+    "repRange": [8, 12],
+    "cue": "Lie chest-down on an incline bench and row with elbows out wide, squeezing your shoulder blades."
+  },
+  {
+    "id": "chin_up",
+    "name": "Chin-up",
+    "equipment": ["pullup_bar"],
+    "pattern": "vertical_pull",
+    "primary": ["lats_lower"],
+    "secondary": ["biceps_short", "biceps_long", "traps_mid"],
+    "repRange": [5, 10],
+    "cue": "Use a shoulder-width underhand grip and pull your elbows down to your sides.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "close_grip_bench_press",
+    "name": "Close-grip bench press",
+    "equipment": ["barbell", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["triceps_lateral"],
+    "secondary": ["chest_mid", "delt_front", "triceps_long"],
+    "repRange": [6, 10],
+    "cue": "Grip about shoulder-width, tuck your elbows and lower the bar to your lower chest."
+  },
+  {
+    "id": "close_grip_lat_pulldown",
+    "name": "Close-grip lat pulldown",
+    "equipment": ["cables"],
+    "pattern": "vertical_pull",
+    "primary": ["lats_lower"],
+    "secondary": ["biceps_long", "traps_mid"],
+    "repRange": [8, 12],
+    "cue": "Use a close neutral grip and pull your elbows down toward your hips.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "cossack_squat",
+    "name": "Cossack squat",
+    "equipment": [],
+    "pattern": "lunge",
+    "primary": ["adductors"],
+    "secondary": ["quads_vasti", "glutes"],
+    "repRange": [8, 12],
+    "cue": "Shift into a deep squat over one leg while the other leg stays straight with toes up."
+  },
+  {
+    "id": "crunch",
+    "name": "Crunch",
+    "equipment": [],
+    "pattern": "core_flexion",
+    "primary": ["abs_upper"],
+    "secondary": [],
+    "repRange": [12, 20],
+    "cue": "Curl your shoulders and ribs toward your hips while your lower back stays on the floor.",
+    "note": "Upper vs lower abs evidence is limited; the whole rectus abdominis works."
+  },
+  {
+    "id": "deadlift",
+    "name": "Conventional deadlift",
+    "equipment": ["barbell"],
+    "pattern": "hinge",
+    "primary": ["glutes", "lower_back"],
+    "secondary": ["hamstrings", "quads_vasti", "traps_upper", "forearms"],
+    "repRange": [4, 8],
+    "cue": "Keep the bar against your legs, back flat, and push the floor away."
+  },
+  {
+    "id": "decline_barbell_press",
+    "name": "Decline barbell press",
+    "equipment": ["barbell", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_lower"],
+    "secondary": ["chest_mid", "triceps_lateral"],
+    "repRange": [6, 10],
+    "cue": "Use a slight decline and lower the bar to the lower part of your chest."
+  },
+  {
+    "id": "dumbbell_bench_press",
+    "name": "Dumbbell bench press",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_mid"],
+    "secondary": ["chest_upper", "delt_front", "triceps_lateral"],
+    "repRange": [8, 12],
+    "cue": "Lower the dumbbells to chest level for a deep stretch, then press up and slightly together."
+  },
+  {
+    "id": "dumbbell_kickback",
+    "name": "Dumbbell triceps kickback",
+    "equipment": ["dumbbells"],
+    "pattern": "elbow_extension",
+    "primary": ["triceps_lateral"],
+    "secondary": ["triceps_long"],
+    "repRange": [12, 15],
+    "cue": "Keep your upper arm still beside your torso and straighten the elbow fully."
+  },
+  {
+    "id": "dumbbell_lateral_raise",
+    "name": "Dumbbell lateral raise",
+    "equipment": ["dumbbells"],
+    "pattern": "lateral_raise",
+    "primary": ["delt_side"],
+    "secondary": ["traps_upper"],
+    "repRange": [12, 20],
+    "cue": "Raise the dumbbells out to the side to shoulder height, leading with the elbows."
+  },
+  {
+    "id": "dumbbell_shrug",
+    "name": "Dumbbell shrug",
+    "equipment": ["dumbbells"],
+    "pattern": "shrug",
+    "primary": ["traps_upper"],
+    "secondary": ["forearms"],
+    "repRange": [10, 15],
+    "cue": "Hold the dumbbells at your sides and lift your shoulders straight up, pausing at the top."
+  },
+  {
+    "id": "dumbbell_wrist_curl",
+    "name": "Dumbbell wrist curl",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "wrist",
+    "primary": ["forearms"],
+    "secondary": [],
+    "repRange": [12, 20],
+    "cue": "Rest your forearms on a bench and curl the dumbbells up by bending at the wrist."
+  },
+  {
+    "id": "face_pull",
+    "name": "Face pull",
+    "equipment": ["cables"],
+    "pattern": "rear_delt",
+    "primary": ["delt_rear", "traps_mid"],
+    "secondary": [],
+    "repRange": [12, 20],
+    "cue": "Pull the rope toward your face and split the ends so your hands finish beside your ears."
+  },
+  {
+    "id": "front_squat",
+    "name": "Front squat",
+    "equipment": ["barbell"],
+    "pattern": "squat",
+    "primary": ["quads_vasti"],
+    "secondary": ["glutes", "adductors"],
+    "repRange": [6, 10],
+    "cue": "Keep your elbows high and your torso upright as you sit straight down."
+  },
+  {
+    "id": "goblet_squat",
+    "name": "Goblet squat",
+    "equipment": ["dumbbells"],
+    "pattern": "squat",
+    "primary": ["quads_vasti"],
+    "secondary": ["glutes", "adductors"],
+    "repRange": [10, 15],
+    "cue": "Hold one dumbbell at your chest and sit down between your knees, chest up."
+  },
+  {
+    "id": "hammer_curl",
+    "name": "Hammer curl",
+    "equipment": ["dumbbells"],
+    "pattern": "elbow_flexion",
+    "primary": ["biceps_long", "forearms"],
+    "secondary": [],
+    "repRange": [8, 12],
+    "cue": "Curl with palms facing each other and elbows pinned to your sides.",
+    "note": "Mostly brachialis and brachioradialis; the long-head label is a convention with limited evidence."
+  },
+  {
+    "id": "hanging_leg_raise",
+    "name": "Hanging leg raise",
+    "equipment": ["pullup_bar"],
+    "pattern": "core_flexion",
+    "primary": ["abs_lower"],
+    "secondary": ["abs_upper"],
+    "repRange": [8, 15],
+    "cue": "Hang still and curl your pelvis up as you raise your legs, without swinging.",
+    "note": "Upper vs lower abs evidence is limited; the whole rectus abdominis works."
+  },
+  {
+    "id": "high_to_low_cable_fly",
+    "name": "High-to-low cable fly",
+    "equipment": ["cables"],
+    "pattern": "fly",
+    "primary": ["chest_lower"],
+    "secondary": ["chest_mid"],
+    "repRange": [12, 15],
+    "cue": "Set the pulleys high and bring your hands down and together in front of your hips."
+  },
+  {
+    "id": "incline_barbell_press",
+    "name": "Incline barbell press",
+    "equipment": ["barbell", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_upper"],
+    "secondary": ["chest_mid", "delt_front", "triceps_lateral"],
+    "repRange": [6, 10],
+    "cue": "Set the bench at about 30 degrees and lower the bar to your upper chest."
+  },
+  {
+    "id": "incline_dumbbell_curl",
+    "name": "Incline dumbbell curl",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "elbow_flexion",
+    "primary": ["biceps_long"],
+    "secondary": ["forearms"],
+    "repRange": [10, 12],
+    "cue": "Sit back on an incline bench, let your arms hang behind you and curl without moving the elbows forward.",
+    "note": "Arm behind the body stretches the long head; head-level evidence is limited."
+  },
+  {
+    "id": "incline_dumbbell_press",
+    "name": "Incline dumbbell press",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_upper"],
+    "secondary": ["delt_front", "triceps_lateral"],
+    "repRange": [8, 12],
+    "cue": "Set the bench at about 30 degrees and lower the dumbbells to your upper chest."
+  },
+  {
+    "id": "kettlebell_swing",
+    "name": "Kettlebell swing",
+    "equipment": ["kettlebells"],
+    "pattern": "hinge",
+    "primary": ["glutes", "hamstrings"],
+    "secondary": ["lower_back", "forearms"],
+    "repRange": [10, 20],
+    "cue": "Snap your hips forward to float the bell to chest height; the arms just guide it."
+  },
+  {
+    "id": "leg_extension",
+    "name": "Leg extension",
+    "equipment": ["machines"],
+    "pattern": "knee_extension",
+    "primary": ["quads_rectus"],
+    "secondary": ["quads_vasti"],
+    "repRange": [10, 15],
+    "cue": "Sit back against the pad and fully straighten your knees, pausing at the top."
+  },
+  {
+    "id": "leg_press",
+    "name": "Leg press",
+    "equipment": ["machines"],
+    "pattern": "squat",
+    "primary": ["quads_vasti"],
+    "secondary": ["glutes", "adductors"],
+    "repRange": [8, 15],
+    "cue": "Lower until your knees are deeply bent while your lower back stays on the pad."
+  },
+  {
+    "id": "low_to_high_cable_fly",
+    "name": "Low-to-high cable fly",
+    "equipment": ["cables"],
+    "pattern": "fly",
+    "primary": ["chest_upper"],
+    "secondary": ["delt_front"],
+    "repRange": [12, 15],
+    "cue": "Set the pulleys low and sweep your hands up and together to upper-chest height."
+  },
+  {
+    "id": "lying_leg_curl",
+    "name": "Lying leg curl",
+    "equipment": ["machines"],
+    "pattern": "knee_flexion",
+    "primary": ["hamstrings"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Keep your hips pressed into the pad and curl your heels toward your glutes."
+  },
+  {
+    "id": "machine_chest_press",
+    "name": "Machine chest press",
+    "equipment": ["machines"],
+    "pattern": "horizontal_push",
+    "primary": ["chest_mid"],
+    "secondary": ["delt_front", "triceps_lateral"],
+    "repRange": [8, 12],
+    "cue": "Set the handles at mid-chest height and keep your shoulder blades against the pad."
+  },
+  {
+    "id": "machine_hip_abduction",
+    "name": "Machine hip abduction",
+    "equipment": ["machines"],
+    "pattern": "hip_abduction",
+    "primary": ["glute_med"],
+    "secondary": ["glutes"],
+    "repRange": [12, 20],
+    "cue": "Sit tall and push your knees out against the pads, controlling the way back."
+  },
+  {
+    "id": "machine_hip_adduction",
+    "name": "Machine hip adduction",
+    "equipment": ["machines"],
+    "pattern": "hip_adduction",
+    "primary": ["adductors"],
+    "secondary": [],
+    "repRange": [12, 15],
+    "cue": "Squeeze your legs together under control and let them open wide for a full stretch."
+  },
+  {
+    "id": "machine_preacher_curl",
+    "name": "Machine preacher curl",
+    "equipment": ["machines"],
+    "pattern": "elbow_flexion",
+    "primary": ["biceps_short"],
+    "secondary": [],
+    "repRange": [10, 12],
+    "cue": "Keep the backs of your arms flat on the pad and lower all the way down slowly.",
+    "note": "Arm in front of the body is thought to favour the short head; evidence is limited."
+  },
+  {
+    "id": "machine_shoulder_press",
+    "name": "Machine shoulder press",
+    "equipment": ["machines"],
+    "pattern": "vertical_push",
+    "primary": ["delt_front"],
+    "secondary": ["delt_side", "triceps_lateral"],
+    "repRange": [8, 12],
+    "cue": "Keep your back on the pad and press up without locking out hard."
+  },
+  {
+    "id": "nordic_curl",
+    "name": "Nordic hamstring curl",
+    "equipment": [],
+    "pattern": "knee_flexion",
+    "primary": ["hamstrings"],
+    "secondary": [],
+    "repRange": [3, 8],
+    "cue": "Hook your heels under a pad or have a partner hold them, then lower forward as slowly as you can, hips straight."
+  },
+  {
+    "id": "overhead_cable_triceps_extension",
+    "name": "Overhead cable triceps extension",
+    "equipment": ["cables"],
+    "pattern": "elbow_extension",
+    "primary": ["triceps_long"],
+    "secondary": ["triceps_lateral"],
+    "repRange": [10, 15],
+    "cue": "Face away from the cable and let your hands travel behind your head for a deep stretch."
+  },
+  {
+    "id": "overhead_dumbbell_triceps_extension",
+    "name": "Overhead dumbbell triceps extension",
+    "equipment": ["dumbbells"],
+    "pattern": "elbow_extension",
+    "primary": ["triceps_long"],
+    "secondary": ["triceps_lateral"],
+    "repRange": [10, 15],
+    "cue": "Hold one dumbbell overhead with both hands and lower it behind your head, elbows pointing up."
+  },
+  {
+    "id": "pallof_press",
+    "name": "Pallof press",
+    "equipment": ["cables"],
+    "pattern": "core_rotation",
+    "primary": ["obliques"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Stand side-on to the cable and press the handle straight out without letting your body twist."
+  },
+  {
+    "id": "pec_deck",
+    "name": "Pec deck fly",
+    "equipment": ["machines"],
+    "pattern": "fly",
+    "primary": ["chest_mid"],
+    "secondary": ["delt_front"],
+    "repRange": [12, 15],
+    "cue": "Keep a slight bend in the elbows and squeeze your arms together in front of your chest."
+  },
+  {
+    "id": "pull_up",
+    "name": "Pull-up",
+    "equipment": ["pullup_bar"],
+    "pattern": "vertical_pull",
+    "primary": ["lats_upper"],
+    "secondary": ["traps_mid", "biceps_long"],
+    "repRange": [5, 10],
+    "cue": "Grip a little wider than your shoulders and pull your chest toward the bar.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "push_up",
+    "name": "Push-up",
+    "equipment": [],
+    "pattern": "horizontal_push",
+    "primary": ["chest_mid"],
+    "secondary": ["delt_front", "triceps_lateral"],
+    "repRange": [8, 20],
+    "cue": "Keep a straight line from head to heels and lower your chest to just above the floor."
+  },
+  {
+    "id": "reverse_crunch",
+    "name": "Reverse crunch",
+    "equipment": [],
+    "pattern": "core_flexion",
+    "primary": ["abs_lower"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Lie on your back and curl your hips off the floor toward your chest, then lower slowly.",
+    "note": "Upper vs lower abs evidence is limited; the whole rectus abdominis works."
+  },
+  {
+    "id": "reverse_pec_deck",
+    "name": "Reverse pec deck",
+    "equipment": ["machines"],
+    "pattern": "rear_delt",
+    "primary": ["delt_rear"],
+    "secondary": ["traps_mid"],
+    "repRange": [12, 20],
+    "cue": "Face the pad and sweep your arms back wide, leading with the elbows."
+  },
+  {
+    "id": "romanian_deadlift",
+    "name": "Romanian deadlift",
+    "equipment": ["barbell"],
+    "pattern": "hinge",
+    "primary": ["hamstrings", "glutes"],
+    "secondary": ["lower_back", "forearms"],
+    "repRange": [8, 12],
+    "cue": "Push your hips back with soft knees and lower the bar along your legs until you feel a hamstring stretch."
+  },
+  {
+    "id": "seated_cable_row",
+    "name": "Seated cable row",
+    "equipment": ["cables"],
+    "pattern": "horizontal_pull",
+    "primary": ["traps_mid", "lats_lower"],
+    "secondary": ["delt_rear", "biceps_long"],
+    "repRange": [8, 12],
+    "cue": "Sit tall and pull the handle to your stomach, squeezing your shoulder blades together.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "seated_calf_raise",
+    "name": "Seated calf raise",
+    "equipment": ["machines"],
+    "pattern": "calf",
+    "primary": ["calves"],
+    "secondary": [],
+    "repRange": [12, 20],
+    "cue": "Lower into a deep stretch, pause, then rise as high as you can."
+  },
+  {
+    "id": "seated_dumbbell_shoulder_press",
+    "name": "Seated dumbbell shoulder press",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "vertical_push",
+    "primary": ["delt_front"],
+    "secondary": ["delt_side", "triceps_lateral"],
+    "repRange": [8, 12],
+    "cue": "Sit upright and press the dumbbells from ear height to just above your head."
+  },
+  {
+    "id": "seated_leg_curl",
+    "name": "Seated leg curl",
+    "equipment": ["machines"],
+    "pattern": "knee_flexion",
+    "primary": ["hamstrings"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Lean your torso slightly forward to stretch the hamstrings and curl all the way down."
+  },
+  {
+    "id": "single_arm_cable_row",
+    "name": "Single-arm cable row",
+    "equipment": ["cables"],
+    "pattern": "horizontal_pull",
+    "primary": ["lats_lower"],
+    "secondary": ["traps_mid", "biceps_long", "delt_rear"],
+    "repRange": [10, 12],
+    "cue": "Drive the elbow toward your hip, not straight back.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "single_arm_dumbbell_row",
+    "name": "Single-arm dumbbell row",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "horizontal_pull",
+    "primary": ["lats_lower"],
+    "secondary": ["traps_mid", "biceps_long", "delt_rear"],
+    "repRange": [8, 12],
+    "cue": "Brace on the bench and pull the dumbbell toward your hip in an arc.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "single_leg_dumbbell_calf_raise",
+    "name": "Single-leg dumbbell calf raise",
+    "equipment": ["dumbbells"],
+    "pattern": "calf",
+    "primary": ["calves"],
+    "secondary": [],
+    "repRange": [10, 20],
+    "cue": "Stand on a step on one foot and use the full range, from deep stretch to high on your toes."
+  },
+  {
+    "id": "sissy_squat",
+    "name": "Sissy squat",
+    "equipment": [],
+    "pattern": "knee_extension",
+    "primary": ["quads_rectus"],
+    "secondary": ["quads_vasti"],
+    "repRange": [8, 15],
+    "cue": "Hold a support, rise onto your toes and lean back as your knees travel forward, hips straight."
+  },
+  {
+    "id": "skull_crusher",
+    "name": "Skull crusher",
+    "equipment": ["barbell", "bench"],
+    "pattern": "elbow_extension",
+    "primary": ["triceps_long"],
+    "secondary": ["triceps_lateral"],
+    "repRange": [8, 12],
+    "cue": "Lower the bar behind your head rather than to your forehead, keeping your elbows pointed up."
+  },
+  {
+    "id": "spider_curl",
+    "name": "Spider curl",
+    "equipment": ["dumbbells", "bench"],
+    "pattern": "elbow_flexion",
+    "primary": ["biceps_short"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Lie chest-down on an incline bench with arms hanging straight and curl to the top.",
+    "note": "Arm in front of the body is thought to favour the short head; evidence is limited."
+  },
+  {
+    "id": "standing_calf_raise",
+    "name": "Standing calf raise",
+    "equipment": ["machines"],
+    "pattern": "calf",
+    "primary": ["calves"],
+    "secondary": [],
+    "repRange": [10, 15],
+    "cue": "Keep your knees straight and pause in the deep stretch at the bottom."
+  },
+  {
+    "id": "straight_arm_pulldown",
+    "name": "Straight-arm pulldown",
+    "equipment": ["cables"],
+    "pattern": "vertical_pull",
+    "primary": ["lats_upper", "lats_lower"],
+    "secondary": ["triceps_long", "delt_rear"],
+    "repRange": [12, 15],
+    "cue": "With arms nearly straight, sweep the bar from eye level down to your thighs.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  },
+  {
+    "id": "sumo_deadlift",
+    "name": "Sumo deadlift",
+    "equipment": ["barbell"],
+    "pattern": "hinge",
+    "primary": ["glutes", "adductors"],
+    "secondary": ["quads_vasti", "hamstrings", "lower_back"],
+    "repRange": [4, 8],
+    "cue": "Take a wide stance, push your knees out and drive the floor apart as you stand."
+  },
+  {
+    "id": "triceps_pushdown",
+    "name": "Cable triceps pushdown",
+    "equipment": ["cables"],
+    "pattern": "elbow_extension",
+    "primary": ["triceps_lateral"],
+    "secondary": ["triceps_long"],
+    "repRange": [10, 15],
+    "cue": "Pin your elbows to your sides and push down until your arms are straight."
+  },
+  {
+    "id": "walking_lunge",
+    "name": "Walking lunge",
+    "equipment": ["dumbbells"],
+    "pattern": "lunge",
+    "primary": ["quads_vasti", "glutes"],
+    "secondary": ["adductors", "glute_med", "hamstrings"],
+    "repRange": [8, 12],
+    "cue": "Take a long step and drop your back knee toward the floor, pushing through the front foot."
+  },
+  {
+    "id": "wide_grip_lat_pulldown",
+    "name": "Wide-grip lat pulldown",
+    "equipment": ["cables"],
+    "pattern": "vertical_pull",
+    "primary": ["lats_upper"],
+    "secondary": ["traps_mid", "biceps_long", "delt_rear"],
+    "repRange": [8, 12],
+    "cue": "Grip wide and pull the bar to your upper chest, driving the elbows down and out.",
+    "note": "Upper vs lower lat emphasis is a coaching convention; evidence is limited."
+  }
+]
