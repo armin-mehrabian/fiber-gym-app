@@ -1,6 +1,7 @@
 package app.fiber.catalog;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -80,6 +81,25 @@ class CatalogControllerTest {
 			.andExpect(status().isOk());
 
 		verify(catalogService).listExercises("row", true);
+	}
+
+	// The list is public, but "only my equipment" needs to know who is asking.
+	@Test
+	void mineWithoutLoginIs401() throws Exception {
+		mockMvc.perform(get("/api/exercises").param("mine", "true"))
+			.andExpect(status().isUnauthorized())
+			.andExpect(content().json("""
+				{ "error": "Login required" }""", JsonCompareMode.STRICT));
+
+		verifyNoInteractions(catalogService);
+	}
+
+	@Test
+	void mineFalseIsTheNormalPublicList() throws Exception {
+		mockMvc.perform(get("/api/exercises").param("mine", "false"))
+			.andExpect(status().isOk());
+
+		verify(catalogService).listExercises(null, false);
 	}
 
 	@Test

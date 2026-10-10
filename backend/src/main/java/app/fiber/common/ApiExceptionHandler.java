@@ -57,11 +57,21 @@ public class ApiExceptionHandler {
 		return new ErrorResponse("Malformed request body");
 	}
 
-	/** The request clashes with existing data, e.g. an email that is already registered. */
+	/**
+	 * The request clashes with existing data, e.g. an email that is already registered.
+	 * "fields" is left out when the conflict isn't about a particular field.
+	 */
 	@ExceptionHandler(ConflictException.class)
 	@ResponseStatus(HttpStatus.CONFLICT)
 	public ErrorResponse conflict(ConflictException e) {
-		return new ErrorResponse(e.getMessage(), e.getFields());
+		return new ErrorResponse(e.getMessage(), e.getFields().isEmpty() ? null : e.getFields());
+	}
+
+	/** A public endpoint was asked for something that needs a login, e.g. GET /api/exercises?mine=true. */
+	@ExceptionHandler(LoginRequiredException.class)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	public ErrorResponse loginRequired(LoginRequiredException e) {
+		return new ErrorResponse(e.getMessage());
 	}
 
 	/**

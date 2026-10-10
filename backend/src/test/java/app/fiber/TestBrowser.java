@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * A tiny browser for integration tests: real HTTP calls to the running app, with its own cookie jar.
  * So the session cookie (JSESSIONID) and the XSRF-TOKEN cookie work like in a real browser.
- * Like the frontend, it sends the XSRF-TOKEN cookie's value back in the X-XSRF-TOKEN header on POST/PUT.
+ * Like the frontend, it sends the XSRF-TOKEN cookie's value back in the X-XSRF-TOKEN header on POST/PUT/PATCH/DELETE.
  * Two instances = two different people.
  */
 public class TestBrowser {
@@ -48,9 +48,14 @@ public class TestBrowser {
 
 	/** Gets a CSRF token and signs up a new user; this browser is then logged in. Returns the email. */
 	public String signUpNewUser() throws IOException, InterruptedException {
+		return signUpNewUser(TIMEZONE);
+	}
+
+	/** Like {@link #signUpNewUser()}, with the user's timezone chosen by the test. */
+	public String signUpNewUser(String timezone) throws IOException, InterruptedException {
 		String email = newEmail();
 		get("/api/auth/csrf");
-		HttpResponse<String> response = post("/api/auth/signup", signupJson(email, PASSWORD, TIMEZONE));
+		HttpResponse<String> response = post("/api/auth/signup", signupJson(email, PASSWORD, timezone));
 		if (response.statusCode() != 201) {
 			throw new IllegalStateException("Signup failed: " + response.statusCode() + " " + response.body());
 		}
@@ -67,6 +72,14 @@ public class TestBrowser {
 
 	public HttpResponse<String> put(String path, String json) throws IOException, InterruptedException {
 		return send(request(path).PUT(BodyPublishers.ofString(json)), true);
+	}
+
+	public HttpResponse<String> patch(String path, String json) throws IOException, InterruptedException {
+		return send(request(path).method("PATCH", BodyPublishers.ofString(json)), true);
+	}
+
+	public HttpResponse<String> delete(String path) throws IOException, InterruptedException {
+		return send(request(path).DELETE(), true);
 	}
 
 	/** A POST like a forged request from another site would send: cookies, but no X-XSRF-TOKEN header. */

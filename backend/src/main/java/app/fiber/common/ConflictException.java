@@ -12,6 +12,11 @@ public class ConflictException extends RuntimeException {
 
 	private final Map<String, String> fields;
 
+	/** A conflict that isn't about one particular field, e.g. "A workout is already in progress". */
+	public ConflictException(String message) {
+		this(message, Map.of());
+	}
+
 	public ConflictException(String message, Map<String, String> fields) {
 		super(message);
 		// A copy that keeps the order the fields were added in, so errors read top to bottom.

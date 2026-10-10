@@ -73,6 +73,14 @@ public class Exercise {
 		this.regions = new HashSet<>(regions);
 	}
 
+	/**
+	 * True if every piece of equipment this exercise needs is in {@code available}.
+	 * Bodyweight exercises need nothing, so they are always possible.
+	 */
+	public boolean canBeDoneWith(Set<String> available) {
+		return available.containsAll(equipmentIds);
+	}
+
 	/** Equipment ids, sorted alphabetically so API output is stable. */
 	public List<String> sortedEquipmentIds() {
 		return equipmentIds.stream().sorted().toList();

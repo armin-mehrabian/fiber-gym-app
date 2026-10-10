@@ -1,9 +1,14 @@
 package app.fiber.catalog;
 
 import app.fiber.common.NotFoundException;
+import app.fiber.settings.UserSettings;
+import app.fiber.settings.UserSettingsRepository;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Predicate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +25,14 @@ public class CatalogService {
 	private final RegionRepository regionRepository;
 	private final EquipmentRepository equipmentRepository;
 	private final ExerciseRepository exerciseRepository;
+	private final UserSettingsRepository settingsRepository;
 
 	public CatalogService(RegionRepository regionRepository, EquipmentRepository equipmentRepository,
-			ExerciseRepository exerciseRepository) {
+			ExerciseRepository exerciseRepository, UserSettingsRepository settingsRepository) {
 		this.regionRepository = regionRepository;
 		this.equipmentRepository = equipmentRepository;
 		this.exerciseRepository = exerciseRepository;
+		this.settingsRepository = settingsRepository;
 	}
 
 	/** All regions, in body-figure order. */
@@ -49,6 +56,21 @@ public class CatalogService {
 	 * @param includeRetired false hides retired exercises
 	 */
 	public List<ExerciseResponse> listExercises(String query, boolean includeRetired) {
+		return listExercises(query, includeRetired, exercise -> true);
+	}
+
+	/**
+	 * Like {@link #listExercises(String, boolean)}, but only exercises the user can do with their
+	 * equipment: everything an exercise needs must be in the user's list. Bodyweight exercises always fit.
+	 */
+	public List<ExerciseResponse> listExercisesForUser(UUID userId, String query, boolean includeRetired) {
+		Set<String> userEquipment = settingsRepository.findById(userId)
+			.map(UserSettings::getEquipmentIds)
+			.orElseThrow(() -> new NotFoundException("Settings not found"));
+		return listExercises(query, includeRetired, exercise -> exercise.canBeDoneWith(userEquipment));
+	}
+
+	private List<ExerciseResponse> listExercises(String query, boolean includeRetired, Predicate<Exercise> fits) {
 		String needle = query == null ? "" : query.strip().toLowerCase(Locale.ROOT);
 		// The catalog is small (about 80 exercises), so we load it all and filter and sort in Java.
 		// That is simpler than one database query per filter combination, and sorting in Java
@@ -56,6 +78,7 @@ public class CatalogService {
 		return exerciseRepository.findAllWithLinks().stream()
 			.filter(exercise -> includeRetired || !exercise.isRetired())
 			.filter(exercise -> exercise.getName().toLowerCase(Locale.ROOT).contains(needle))
+			.filter(fits)
 			.sorted(BY_NAME)
 			.map(ExerciseResponse::from)
 			.toList();

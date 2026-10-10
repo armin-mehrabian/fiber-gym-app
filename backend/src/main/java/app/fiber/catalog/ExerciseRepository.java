@@ -1,5 +1,6 @@
 package app.fiber.catalog;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,5 +15,9 @@ public interface ExerciseRepository extends JpaRepository<Exercise, String> {
 	@EntityGraph(attributePaths = {"equipmentIds", "regions"})
 	@Query("select e from Exercise e")
 	List<Exercise> findAllWithLinks();
+
+	/** The given exercises with their region links loaded in the same query (e.g. all exercises of a workout). */
+	@EntityGraph(attributePaths = {"regions"})
+	List<Exercise> findWithRegionsByIdIn(Collection<String> ids);
 
 }
