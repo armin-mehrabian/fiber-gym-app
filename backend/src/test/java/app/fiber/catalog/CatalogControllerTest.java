@@ -11,6 +11,7 @@ import app.fiber.common.NotFoundException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -21,7 +22,9 @@ import org.springframework.test.web.servlet.MockMvc;
  * Web layer only: the service is mocked. Checks the JSON shapes, the query parameters,
  * the 404 body, and (with our SecurityConfig) that the catalog needs no login.
  */
-@WebMvcTest(CatalogController.class)
+// Without the database, our own UserDetailsService isn't loaded here, so Spring Boot would
+// create a demo user and log a generated password. Not needed: these tests never log in.
+@WebMvcTest(controllers = CatalogController.class, excludeAutoConfiguration = UserDetailsServiceAutoConfiguration.class)
 @Import(SecurityConfig.class)
 class CatalogControllerTest {
 

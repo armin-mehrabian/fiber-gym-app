@@ -32,8 +32,13 @@ class CatalogIntegrationTest {
 	void regionsAreSortedByOrder() throws Exception {
 		mockMvc.perform(get("/api/regions"))
 			.andExpect(status().isOk())
+			// The fixture file lists them out of order on purpose.
 			.andExpect(jsonPath("$[*].id").value(contains(
-				"chest_upper", "chest_mid", "delt_front", "lats_upper", "lats_lower", "biceps_long")))
+				"chest_upper", "chest_mid", "chest_lower", "delt_front", "delt_side", "delt_rear",
+				"traps_upper", "traps_mid", "lats_upper", "lats_lower", "lower_back",
+				"biceps_long", "biceps_short", "triceps_long", "triceps_lateral", "forearms",
+				"abs_upper", "abs_lower", "obliques",
+				"quads_rectus", "quads_vasti", "adductors", "glutes", "glute_med", "hamstrings", "calves")))
 			.andExpect(jsonPath("$[0].name").value("Upper chest"))
 			.andExpect(jsonPath("$[0].group").value("chest"))
 			.andExpect(jsonPath("$[0].view").value("front"))

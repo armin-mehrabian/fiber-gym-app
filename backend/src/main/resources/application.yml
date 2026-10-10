@@ -1,6 +1,16 @@
 # Safe defaults for local Docker only. Real values come from environment variables.
 server:
   port: 8080
+  servlet:
+    session:
+      cookie:
+        # The login cookie (JSESSIONID): JavaScript can't read it (http-only), and the browser
+        # doesn't send it on requests started by other sites, e.g. a form posting to us (same-site lax).
+        http-only: true
+        same-site: lax
+        # Secure = only sent over HTTPS. Set SESSION_COOKIE_SECURE=true behind HTTPS in production.
+        # Also used for the XSRF-TOKEN cookie (see SecurityConfig).
+        secure: ${SESSION_COOKIE_SECURE:false}
 
 spring:
   application:

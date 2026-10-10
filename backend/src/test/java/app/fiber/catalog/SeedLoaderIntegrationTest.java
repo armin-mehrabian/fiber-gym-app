@@ -52,7 +52,7 @@ class SeedLoaderIntegrationTest {
 		Map<String, Object> region = jdbcTemplate.queryForMap(
 			"select name, muscle_group, view, sort_order from region where id = 'lats_upper'");
 		assertThat(region).containsEntry("name", "Upper lats").containsEntry("muscle_group", "back")
-			.containsEntry("view", "back").containsEntry("sort_order", 90);
+			.containsEntry("view", "back").containsEntry("sort_order", 32);
 
 		Map<String, Object> row = jdbcTemplate.queryForMap(
 			"select name, pattern, rep_low, rep_high, cue, note, retired from exercise where id = 'single_arm_cable_row'");
@@ -219,9 +219,9 @@ class SeedLoaderIntegrationTest {
 
 	// ---- helpers ----
 
-	/** Fixture counts: 6 regions, 3 equipment, 5 exercises, 5 equipment links, 11 region links. */
+	/** Fixture counts: 26 regions, 3 equipment, 5 exercises, 5 equipment links, 11 region links. */
 	private void assertFixtureRowCounts() {
-		assertThat(count("region")).isEqualTo(6);
+		assertThat(count("region")).isEqualTo(26);
 		assertThat(count("equipment")).isEqualTo(3);
 		assertThat(count("exercise")).isEqualTo(5);
 		assertThat(count("exercise_equipment")).isEqualTo(5);
