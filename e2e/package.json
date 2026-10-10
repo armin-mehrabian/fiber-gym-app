@@ -1,0 +1,14 @@
+{
+  "name": "fiber-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser tests for Fiber, run against the full app started with docker compose",
+  "scripts": {
+    "cy:run": "cypress run",
+    "cy:open": "cypress open"
+  },
+  "devDependencies": {
+    "cypress": "^16.1.1",
+    "typescript": "^5"
+  }
+}
