@@ -41,6 +41,17 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
+  data:
+    name: Data (validate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Checks regions/exercises/equipment are consistent (no dependencies needed).
+      - run: node data/validate.mjs
+
   docker:
     name: Docker images build
     runs-on: ubuntu-latest

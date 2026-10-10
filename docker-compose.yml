@@ -27,7 +27,10 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-fiber} # "db" is the service name above
       DB_USER: ${POSTGRES_USER:-fiber}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-fiber}
+      SEED_DIR: /app/data # where the backend reads regions/exercises at startup
       TZ: UTC
+    volumes:
+      - ./data:/app/data:ro # the data/ folder, read-only inside the container
     ports:
       - "8080:8080"
     depends_on:
