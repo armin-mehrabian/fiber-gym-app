@@ -1,8 +1,12 @@
 package app.fiber.workout;
 
+import app.fiber.progression.Suggestion;
+import app.fiber.progression.SuggestionReason;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,9 +56,18 @@ public class SessionExercise {
 	@Column(name = "rep_high")
 	private int repHigh;
 
-	// Filled in by the weight suggestions later; null for now.
+	// The suggestion for this workout, worked out when the exercise was added or swapped in.
+	// The weight is null when there is no history (and all three are null for exercises added
+	// before suggestions existed).
 	@Column(name = "suggested_weight_kg")
 	private BigDecimal suggestedWeightKg;
+
+	@Column(name = "suggested_reps")
+	private Integer suggestedReps;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "suggestion_reason")
+	private SuggestionReason suggestionReason;
 
 	// Load the sets of up to 50 exercises in one query, instead of one query per exercise.
 	@BatchSize(size = 50)
@@ -91,6 +104,23 @@ public class SessionExercise {
 		}
 	}
 
+	/** Stores the weight and rep target suggested for this workout. */
+	public void applySuggestion(Suggestion suggestion) {
+		this.suggestedWeightKg = suggestion.weightKg();
+		this.suggestedReps = suggestion.reps();
+		this.suggestionReason = suggestion.reason();
+	}
+
+	/**
+	 * Swap: another exercise takes this place, with its own rep range. The planned number of sets
+	 * stays. Only allowed while no sets are logged (checked by the service).
+	 */
+	void swapTo(String exerciseId, int repLow, int repHigh) {
+		this.exerciseId = exerciseId;
+		this.repLow = repLow;
+		this.repHigh = repHigh;
+	}
+
 	void setPosition(int position) {
 		this.position = position;
 	}
@@ -125,6 +155,14 @@ public class SessionExercise {
 
 	public BigDecimal getSuggestedWeightKg() {
 		return suggestedWeightKg;
+	}
+
+	public Integer getSuggestedReps() {
+		return suggestedReps;
+	}
+
+	public SuggestionReason getSuggestionReason() {
+		return suggestionReason;
 	}
 
 	public List<WorkoutSet> getSets() {

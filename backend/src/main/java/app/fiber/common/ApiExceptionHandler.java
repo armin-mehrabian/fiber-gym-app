@@ -6,10 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 /**
@@ -39,6 +41,22 @@ public class ApiExceptionHandler {
 		Map<String, String> fields = new LinkedHashMap<>();
 		for (FieldError error : e.getBindingResult().getFieldErrors()) {
 			fields.putIfAbsent(error.getField(), error.getDefaultMessage());
+		}
+		return new ErrorResponse("Invalid input", fields);
+	}
+
+	/**
+	 * A request parameter that failed its check, e.g. a missing ?exerciseId= marked @NotBlank.
+	 * Same shape as an invalid body: one message per bad parameter, by parameter name.
+	 */
+	@ExceptionHandler(HandlerMethodValidationException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ErrorResponse invalidParameter(HandlerMethodValidationException e) {
+		Map<String, String> fields = new LinkedHashMap<>();
+		for (ParameterValidationResult result : e.getParameterValidationResults()) {
+			String name = result.getMethodParameter().getParameterName();
+			result.getResolvableErrors().stream().findFirst()
+				.ifPresent(error -> fields.putIfAbsent(name, error.getDefaultMessage()));
 		}
 		return new ErrorResponse("Invalid input", fields);
 	}

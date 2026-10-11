@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import app.fiber.common.NotFoundException;
 import app.fiber.settings.UserSettings;
 import app.fiber.settings.UserSettingsRepository;
+import app.fiber.workout.ExerciseHistoryService;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,7 +25,8 @@ class CatalogServiceTest {
 	private final ExerciseRepository exerciseRepository = mock(ExerciseRepository.class);
 	private final UserSettingsRepository settingsRepository = mock(UserSettingsRepository.class);
 	private final CatalogService catalogService =
-		new CatalogService(regionRepository, equipmentRepository, exerciseRepository, settingsRepository);
+		new CatalogService(regionRepository, equipmentRepository, exerciseRepository, settingsRepository,
+			mock(ExerciseHistoryService.class));
 
 	@Test
 	void equipmentKeepsTheRepositoryOrderAndMapsIdAndName() {
@@ -133,7 +135,7 @@ class CatalogServiceTest {
 				new ExerciseRegion("biceps_long", RegionRole.SECONDARY, 1)));
 		when(exerciseRepository.findById("row")).thenReturn(Optional.of(row));
 
-		ExerciseDetailResponse detail = catalogService.getExercise("row");
+		ExerciseDetailResponse detail = catalogService.getExercise("row", null);
 
 		assertThat(detail.primary()).containsExactly("lats_lower");
 		assertThat(detail.secondary()).containsExactly("traps_mid", "biceps_long"); // by position, not alphabetical
@@ -148,7 +150,7 @@ class CatalogServiceTest {
 	void unknownExerciseThrowsNotFound() {
 		when(exerciseRepository.findById("nope")).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> catalogService.getExercise("nope"))
+		assertThatThrownBy(() -> catalogService.getExercise("nope", null))
 			.isInstanceOf(NotFoundException.class)
 			.hasMessage("Exercise not found: nope");
 	}

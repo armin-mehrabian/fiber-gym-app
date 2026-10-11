@@ -36,8 +36,9 @@ class WorkoutServiceTest {
 	private final ExerciseRepository exerciseRepository = mock(ExerciseRepository.class);
 	private final SplitDayRepository splitDayRepository = mock(SplitDayRepository.class);
 	private final UserSettingsRepository settingsRepository = mock(UserSettingsRepository.class);
+	private final ExerciseHistoryService historyService = mock(ExerciseHistoryService.class);
 	private final WorkoutService service = new WorkoutService(sessionRepository, setRepository, exerciseRepository,
-		splitDayRepository, settingsRepository);
+		splitDayRepository, settingsRepository, historyService);
 
 	// Two starts at the same moment both pass the "already active?" check; the database index stops
 	// the second one, and the user must get the same 409 as usual, not a 500.
@@ -46,7 +47,7 @@ class WorkoutServiceTest {
 		when(sessionRepository.existsByUserIdAndStatus(USER, SessionStatus.ACTIVE)).thenReturn(false);
 		when(sessionRepository.saveAndFlush(any())).thenThrow(violationOf("workout_session_one_active_per_user"));
 
-		assertThatThrownBy(() -> service.start(USER, null))
+		assertThatThrownBy(() -> service.start(USER, null, List.of()))
 			.isInstanceOf(ConflictException.class)
 			.hasMessage("A workout is already in progress");
 	}
@@ -58,7 +59,7 @@ class WorkoutServiceTest {
 		when(sessionRepository.existsByUserIdAndStatus(USER, SessionStatus.ACTIVE)).thenReturn(false);
 		when(sessionRepository.saveAndFlush(any())).thenThrow(otherError);
 
-		assertThatThrownBy(() -> service.start(USER, null)).isSameAs(otherError);
+		assertThatThrownBy(() -> service.start(USER, null, List.of())).isSameAs(otherError);
 	}
 
 	@Test
@@ -70,7 +71,7 @@ class WorkoutServiceTest {
 	void aStartWhileOneIsActiveIs409WithoutSaving() {
 		when(sessionRepository.existsByUserIdAndStatus(USER, SessionStatus.ACTIVE)).thenReturn(true);
 
-		assertThatThrownBy(() -> service.start(USER, null)).isInstanceOf(ConflictException.class);
+		assertThatThrownBy(() -> service.start(USER, null, List.of())).isInstanceOf(ConflictException.class);
 		verify(sessionRepository, never()).saveAndFlush(any());
 	}
 
@@ -80,7 +81,7 @@ class WorkoutServiceTest {
 		UUID dayId = UUID.randomUUID();
 		when(splitDayRepository.findById(dayId)).thenReturn(Optional.of(othersDay));
 
-		assertThatThrownBy(() -> service.start(USER, dayId))
+		assertThatThrownBy(() -> service.start(USER, dayId, List.of()))
 			.isInstanceOf(BadRequestException.class)
 			.satisfies(e -> assertThat(((BadRequestException) e).getFields())
 				.containsEntry("splitDayId", "unknown split day"));

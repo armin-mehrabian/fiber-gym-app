@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,9 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class WorkoutController {
 
 	private final WorkoutService workoutService;
+	private final SummaryService summaryService;
 
-	public WorkoutController(WorkoutService workoutService) {
+	public WorkoutController(WorkoutService workoutService, SummaryService summaryService) {
 		this.workoutService = workoutService;
+		this.summaryService = summaryService;
 	}
 
 	/** 200 with the workout in progress, or 204 if there is none. */
@@ -40,12 +43,19 @@ public class WorkoutController {
 			.orElseGet(() -> ResponseEntity.noContent().build());
 	}
 
-	/** The body is optional: no body (or no splitDayId) starts a workout called "Workout". */
+	/**
+	 * The body is optional: no body (or no splitDayId) starts a workout called "Workout";
+	 * no exercises starts an empty one.
+	 */
 	@PostMapping("/sessions")
 	@ResponseStatus(HttpStatus.CREATED)
 	public SessionResponse start(@AuthenticationPrincipal AccountUser user,
-			@RequestBody(required = false) StartSessionRequest body) {
-		return workoutService.start(user.getId(), body == null ? null : body.splitDayId());
+			@Valid @RequestBody(required = false) StartSessionRequest body) {
+		UUID splitDayId = body == null ? null : body.splitDayId();
+		List<String> exerciseIds = body == null || body.exercises() == null
+			? List.of()
+			: body.exercises().stream().map(AddExerciseRequest::exerciseId).toList();
+		return workoutService.start(user.getId(), splitDayId, exerciseIds);
 	}
 
 	@GetMapping("/sessions/{id}")
@@ -57,6 +67,13 @@ public class WorkoutController {
 	public SessionResponse addExercise(@AuthenticationPrincipal AccountUser user, @PathVariable UUID id,
 			@Valid @RequestBody AddExerciseRequest body) {
 		return workoutService.addExercise(user.getId(), id, body.exerciseId());
+	}
+
+	/** Swap the exercise at this position for another one (only while it has no sets). */
+	@PutMapping("/sessions/{id}/exercises/{position}")
+	public SessionResponse swapExercise(@AuthenticationPrincipal AccountUser user, @PathVariable UUID id,
+			@PathVariable int position, @Valid @RequestBody AddExerciseRequest body) {
+		return workoutService.swapExercise(user.getId(), id, position, body.exerciseId());
 	}
 
 	@DeleteMapping("/sessions/{id}/exercises/{position}")
@@ -87,6 +104,12 @@ public class WorkoutController {
 	@PostMapping("/sessions/{id}/finish")
 	public SessionResponse finish(@AuthenticationPrincipal AccountUser user, @PathVariable UUID id) {
 		return workoutService.finish(user.getId(), id);
+	}
+
+	/** What a finished workout did (409 while it is still in progress). */
+	@GetMapping("/sessions/{id}/summary")
+	public SummaryResponse summary(@AuthenticationPrincipal AccountUser user, @PathVariable UUID id) {
+		return summaryService.summary(user.getId(), id);
 	}
 
 	/** Discard: deletes a workout in progress. */

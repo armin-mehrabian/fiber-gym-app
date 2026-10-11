@@ -104,7 +104,7 @@ class CatalogControllerTest {
 
 	@Test
 	void exerciseDetailAddsNoteBestAndLast() throws Exception {
-		when(catalogService.getExercise("single_arm_cable_row")).thenReturn(new ExerciseDetailResponse(
+		when(catalogService.getExercise("single_arm_cable_row", null)).thenReturn(new ExerciseDetailResponse(
 			ROW.id(), ROW.name(), ROW.equipment(), ROW.pattern(), ROW.primary(), ROW.secondary(), ROW.repRange(),
 			ROW.cue(), "Weak evidence.", null, null));
 
@@ -119,7 +119,7 @@ class CatalogControllerTest {
 
 	@Test
 	void unknownExerciseIs404WithErrorBody() throws Exception {
-		when(catalogService.getExercise("nope")).thenThrow(new NotFoundException("Exercise not found: nope"));
+		when(catalogService.getExercise("nope", null)).thenThrow(new NotFoundException("Exercise not found: nope"));
 
 		mockMvc.perform(get("/api/exercises/nope"))
 			.andExpect(status().isNotFound())

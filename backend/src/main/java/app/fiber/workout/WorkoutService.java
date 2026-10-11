@@ -6,6 +6,7 @@ import app.fiber.catalog.RegionRole;
 import app.fiber.common.BadRequestException;
 import app.fiber.common.ConflictException;
 import app.fiber.common.NotFoundException;
+import app.fiber.progression.Suggestion;
 import app.fiber.settings.SplitDay;
 import app.fiber.settings.SplitDayRepository;
 import app.fiber.settings.UserSettings;
@@ -13,6 +14,8 @@ import app.fiber.settings.UserSettingsRepository;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,21 +47,24 @@ public class WorkoutService {
 
 	private static final String ALREADY_ACTIVE = "A workout is already in progress";
 	private static final String FINISHED = "This workout is finished";
+	private static final String SWAP_WITH_SETS = "Remove its sets before swapping";
 
 	private final WorkoutSessionRepository sessionRepository;
 	private final WorkoutSetRepository setRepository;
 	private final ExerciseRepository exerciseRepository;
 	private final SplitDayRepository splitDayRepository;
 	private final UserSettingsRepository settingsRepository;
+	private final ExerciseHistoryService historyService;
 
 	public WorkoutService(WorkoutSessionRepository sessionRepository, WorkoutSetRepository setRepository,
 			ExerciseRepository exerciseRepository, SplitDayRepository splitDayRepository,
-			UserSettingsRepository settingsRepository) {
+			UserSettingsRepository settingsRepository, ExerciseHistoryService historyService) {
 		this.sessionRepository = sessionRepository;
 		this.setRepository = setRepository;
 		this.exerciseRepository = exerciseRepository;
 		this.splitDayRepository = splitDayRepository;
 		this.settingsRepository = settingsRepository;
+		this.historyService = historyService;
 	}
 
 	// ---- sessions ----
@@ -70,16 +76,22 @@ public class WorkoutService {
 	}
 
 	/**
-	 * Starts an empty workout. It is named after the split day if one is given, otherwise "Workout".
-	 * Only one workout can be in progress per user.
+	 * Starts a workout. It is named after the split day if one is given, otherwise "Workout".
+	 * The given exercises (may be empty) are added in order, each with its suggestion, like
+	 * {@link #addExercise}. Only one workout can be in progress per user.
 	 */
 	@Transactional
-	public SessionResponse start(UUID userId, UUID splitDayId) {
+	public SessionResponse start(UUID userId, UUID splitDayId, List<String> exerciseIds) {
 		if (sessionRepository.existsByUserIdAndStatus(userId, SessionStatus.ACTIVE)) {
 			throw new ConflictException(ALREADY_ACTIVE);
 		}
 		String name = splitDayId == null ? DEFAULT_NAME : findOwnSplitDay(userId, splitDayId).getName();
+		List<Exercise> exercises = findLibraryExercises(exerciseIds);
 		WorkoutSession session = new WorkoutSession(userId, splitDayId, name, now());
+		Map<String, Suggestion> suggestions = historyService.suggestionsFor(userId, exercises);
+		for (Exercise exercise : exercises) {
+			addPlanned(session, exercise, suggestions.get(exercise.getId()));
+		}
 		try {
 			sessionRepository.saveAndFlush(session);
 		} catch (DataIntegrityViolationException e) {
@@ -120,13 +132,38 @@ public class WorkoutService {
 
 	// ---- exercises in a session ----
 
-	/** Adds an exercise at the end of the workout, with 3 planned sets and the exercise's rep range. */
+	/**
+	 * Adds an exercise at the end of the workout, with 3 planned sets, the exercise's rep range and
+	 * a weight suggestion from the last time the user did it.
+	 */
 	@Transactional
 	public SessionResponse addExercise(UUID userId, UUID sessionId, String exerciseId) {
 		WorkoutSession session = findOwnActiveSession(userId, sessionId);
-		Exercise exercise = exerciseRepository.findById(exerciseId)
-			.orElseThrow(() -> new BadRequestException("Invalid input", Map.of("exerciseId", "unknown exercise")));
-		session.addExercise(exercise.getId(), DEFAULT_TARGET_SETS, exercise.getRepLow(), exercise.getRepHigh());
+		Exercise exercise = findLibraryExercise(exerciseId);
+		addPlanned(session, exercise, historyService.suggestionFor(userId, exercise));
+		sessionRepository.flush();
+		return toResponse(session);
+	}
+
+	private static void addPlanned(WorkoutSession session, Exercise exercise, Suggestion suggestion) {
+		session.addExercise(exercise.getId(), DEFAULT_TARGET_SETS, exercise.getRepLow(), exercise.getRepHigh())
+			.applySuggestion(suggestion);
+	}
+
+	/**
+	 * Swap: another exercise takes this position, with its own rep range and suggestion.
+	 * Only while the exercise has no sets at all (409 otherwise), so no logged work is ever lost.
+	 */
+	@Transactional
+	public SessionResponse swapExercise(UUID userId, UUID sessionId, int position, String exerciseId) {
+		WorkoutSession session = findOwnActiveSession(userId, sessionId);
+		SessionExercise slot = findExercise(session, position);
+		if (!slot.getSets().isEmpty()) {
+			throw new ConflictException(SWAP_WITH_SETS);
+		}
+		Exercise exercise = findLibraryExercise(exerciseId);
+		slot.swapTo(exercise.getId(), exercise.getRepLow(), exercise.getRepHigh());
+		slot.applySuggestion(historyService.suggestionFor(userId, exercise));
 		sessionRepository.flush();
 		return toResponse(session);
 	}
@@ -245,6 +282,33 @@ public class WorkoutService {
 			.orElseThrow(() -> new NotFoundException("No exercise at position " + position + " in this workout"));
 	}
 
+	private Exercise findLibraryExercise(String exerciseId) {
+		return exerciseRepository.findById(exerciseId)
+			.orElseThrow(() -> new BadRequestException("Invalid input", Map.of("exerciseId", "unknown exercise")));
+	}
+
+	/**
+	 * The exercises of a new workout, in the order given. Unknown ids are named by their place in
+	 * the list, e.g. {"exercises[1].exerciseId": "unknown exercise"}, and nothing is started.
+	 */
+	private List<Exercise> findLibraryExercises(List<String> exerciseIds) {
+		Map<String, Exercise> found = exerciseRepository.findAllById(exerciseIds).stream()
+			.collect(Collectors.toMap(Exercise::getId, Function.identity()));
+		List<Exercise> exercises = new ArrayList<>();
+		Map<String, String> unknown = new LinkedHashMap<>();
+		for (int i = 0; i < exerciseIds.size(); i++) {
+			Exercise exercise = found.get(exerciseIds.get(i));
+			if (exercise == null) {
+				unknown.put("exercises[" + i + "].exerciseId", "unknown exercise");
+			}
+			exercises.add(exercise);
+		}
+		if (!unknown.isEmpty()) {
+			throw new BadRequestException("Invalid input", unknown);
+		}
+		return exercises;
+	}
+
 	/** A split day of another user is treated like an unknown one. */
 	private SplitDay findOwnSplitDay(UUID userId, UUID splitDayId) {
 		return splitDayRepository.findById(splitDayId)
@@ -274,14 +338,20 @@ public class WorkoutService {
 		List<String> exerciseIds = session.getExercises().stream().map(SessionExercise::getExerciseId).toList();
 		Map<String, Exercise> library = exerciseRepository.findWithRegionsByIdIn(exerciseIds).stream()
 			.collect(Collectors.toMap(Exercise::getId, Function.identity()));
+		// "Last time" helps while training; a finished workout doesn't need it.
+		Map<String, LastTimeResponse> lastTimes = session.isFinished()
+			? Map.of()
+			: historyService.lastTimes(session.getUserId(), exerciseIds);
 		List<SessionExerciseResponse> exercises = session.getExercises().stream()
-			.map(exercise -> toResponse(exercise, library.get(exercise.getExerciseId())))
+			.map(exercise -> toResponse(exercise, library.get(exercise.getExerciseId()),
+				lastTimes.get(exercise.getExerciseId())))
 			.toList();
-		return new SessionResponse(session.getId(), session.getName(), session.getStatus(), session.getStartedAt(),
-			session.getFinishedAt(), exercises);
+		return new SessionResponse(session.getId(), session.getName(), session.getSplitDayId(), session.getStatus(),
+			session.getStartedAt(), session.getFinishedAt(), exercises);
 	}
 
-	private static SessionExerciseResponse toResponse(SessionExercise exercise, Exercise libraryEntry) {
+	private static SessionExerciseResponse toResponse(SessionExercise exercise, Exercise libraryEntry,
+			LastTimeResponse lastTime) {
 		List<SetResponse> sets = exercise.getSets().stream().map(SetResponse::from).toList();
 		return new SessionExerciseResponse(
 			exercise.getPosition(),
@@ -292,6 +362,9 @@ public class WorkoutService {
 			exercise.getTargetSets(),
 			List.of(exercise.getRepLow(), exercise.getRepHigh()),
 			exercise.getSuggestedWeightKg(),
+			exercise.getSuggestedReps(),
+			exercise.getSuggestionReason(),
+			lastTime,
 			sets);
 	}
 

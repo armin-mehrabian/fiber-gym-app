@@ -87,13 +87,16 @@ class WorkoutIntegrationTest {
 		assertThat(first.statusCode()).isEqualTo(200);
 		String second = addExercise(id, "single_arm_cable_row");
 		STRICT.assertIsMatch("""
-			{"id": "%s", "name": "Workout", "status": "ACTIVE", "startedAt": "%s", "finishedAt": null,
+			{"id": "%s", "name": "Workout", "splitDayId": null, "status": "ACTIVE", "startedAt": "%s",
+			 "finishedAt": null,
 			 "exercises": [{"position": 1, "exerciseId": "incline_barbell_press", "name": "Incline barbell press",
 			  "primary": ["chest_upper", "chest_mid"], "secondary": ["delt_front"], "targetSets": 3,
-			  "repRange": [6, 10], "suggestedWeightKg": null, "sets": []},
+			  "repRange": [6, 10], "suggestedWeightKg": null, "suggestedReps": 10, "suggestionReason": "NO_HISTORY",
+			  "lastTime": null, "sets": []},
 			 {"position": 2, "exerciseId": "single_arm_cable_row", "name": "Single-arm cable row",
 			  "primary": ["lats_lower"], "secondary": ["lats_upper", "biceps_long"], "targetSets": 3,
-			  "repRange": [10, 12], "suggestedWeightKg": null, "sets": []}]}"""
+			  "repRange": [10, 12], "suggestedWeightKg": null, "suggestedReps": 12, "suggestionReason": "NO_HISTORY",
+			  "lastTime": null, "sets": []}]}"""
 			.formatted(id, JsonPath.read(started.body(), "$.startedAt")), second);
 
 		// Sets: a new set gets the next number and is not completed yet.

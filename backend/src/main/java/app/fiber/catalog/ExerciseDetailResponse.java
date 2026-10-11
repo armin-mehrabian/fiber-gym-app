@@ -1,10 +1,13 @@
 package app.fiber.catalog;
 
+import app.fiber.workout.BestSetResponse;
+import app.fiber.workout.LastTimeResponse;
 import java.util.List;
 
 /**
  * Body of GET /api/exercises/{id}: the list item fields plus note, best and last.
- * best and last (personal best and last workout) are always null until Phase 10 fills them.
+ * best (the user's best set ever) and last (their last finished workout with it) are null for
+ * visitors, and for a user who hasn't done the exercise yet.
  */
 public record ExerciseDetailResponse(
 	String id,
@@ -16,13 +19,13 @@ public record ExerciseDetailResponse(
 	List<Integer> repRange,
 	String cue,
 	String note,
-	Object best,
-	Object last) {
+	BestSetResponse best,
+	LastTimeResponse last) {
 
-	static ExerciseDetailResponse from(Exercise exercise) {
+	static ExerciseDetailResponse from(Exercise exercise, BestSetResponse best, LastTimeResponse last) {
 		ExerciseResponse item = ExerciseResponse.from(exercise);
 		return new ExerciseDetailResponse(item.id(), item.name(), item.equipment(), item.pattern(), item.primary(),
-			item.secondary(), item.repRange(), item.cue(), exercise.getNote(), null, null);
+			item.secondary(), item.repRange(), item.cue(), exercise.getNote(), best, last);
 	}
 
 }

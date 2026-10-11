@@ -3,6 +3,8 @@ package app.fiber.catalog;
 import app.fiber.common.NotFoundException;
 import app.fiber.settings.UserSettings;
 import app.fiber.settings.UserSettingsRepository;
+import app.fiber.workout.ExerciseHistoryResponse;
+import app.fiber.workout.ExerciseHistoryService;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -26,13 +28,16 @@ public class CatalogService {
 	private final EquipmentRepository equipmentRepository;
 	private final ExerciseRepository exerciseRepository;
 	private final UserSettingsRepository settingsRepository;
+	private final ExerciseHistoryService historyService;
 
 	public CatalogService(RegionRepository regionRepository, EquipmentRepository equipmentRepository,
-			ExerciseRepository exerciseRepository, UserSettingsRepository settingsRepository) {
+			ExerciseRepository exerciseRepository, UserSettingsRepository settingsRepository,
+			ExerciseHistoryService historyService) {
 		this.regionRepository = regionRepository;
 		this.equipmentRepository = equipmentRepository;
 		this.exerciseRepository = exerciseRepository;
 		this.settingsRepository = settingsRepository;
+		this.historyService = historyService;
 	}
 
 	/** All regions, in body-figure order. */
@@ -84,10 +89,28 @@ public class CatalogService {
 			.toList();
 	}
 
-	/** One exercise, retired or not (old workouts still link to retired ones). */
-	public ExerciseDetailResponse getExercise(String id) {
+	/**
+	 * One exercise, retired or not (old workouts still link to retired ones).
+	 *
+	 * @param userId the logged-in user, whose best set and last time are filled in; null for a visitor
+	 */
+	public ExerciseDetailResponse getExercise(String id, UUID userId) {
+		Exercise exercise = findExercise(id);
+		if (userId == null) {
+			return ExerciseDetailResponse.from(exercise, null, null);
+		}
+		return ExerciseDetailResponse.from(exercise, historyService.best(userId, id),
+			historyService.lastTime(userId, id));
+	}
+
+	/** The user's finished workouts with this exercise, newest first (at most 20). 404 for an unknown id. */
+	public List<ExerciseHistoryResponse> exerciseHistory(String id, UUID userId) {
+		findExercise(id);
+		return historyService.history(userId, id);
+	}
+
+	private Exercise findExercise(String id) {
 		return exerciseRepository.findById(id)
-			.map(ExerciseDetailResponse::from)
 			.orElseThrow(() -> new NotFoundException("Exercise not found: " + id));
 	}
 

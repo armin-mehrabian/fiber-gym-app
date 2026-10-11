@@ -28,6 +28,9 @@ public interface WorkoutSessionRepository extends JpaRepository<WorkoutSession, 
 
 	boolean existsByUserIdAndStatus(UUID userId, SessionStatus status);
 
+	/** The user's most recently finished workout (pass FINISHED), e.g. to find the next split day. */
+	Optional<WorkoutSession> findFirstByUserIdAndStatusOrderByFinishedAtDesc(UUID userId, SessionStatus status);
+
 	/**
 	 * The user's finished workouts started at or after {@code from}, newest first, with two counts each:
 	 * how many exercises, and how many working sets (completed and not a warm-up).

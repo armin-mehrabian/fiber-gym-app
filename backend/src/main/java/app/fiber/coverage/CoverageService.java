@@ -59,19 +59,49 @@ public class CoverageService {
 		ZoneId zone = userTimezone(userId);
 		Instant now = Instant.now();
 		LocalDate monday = WeekMath.weekStart(date != null ? date : now.atZone(zone).toLocalDate());
-		Instant from = WeekMath.startOf(monday, zone);
-		Instant to = WeekMath.startOf(monday.plusWeeks(1), zone);
 
-		CoverageResult coverage = CoverageCalculator.calculate(targets(userId),
-			countedSets(coverageRepository.findCountedSetRegions(userId, from, to), zone));
-		Set<String> recovering = RecoveryCalculator.recoveringRegions(recentSessions(userId, now), now);
-		List<CoverageDayResponse> days = days(monday, coverageRepository.findFinishedStartTimes(userId, from, to),
-			zone);
+		CoverageResult coverage = coverage(userId, monday, zone, Set.of());
+		Set<String> recovering = recoveringRegions(userId, now);
+		List<Instant> sessionStarts = coverageRepository.findFinishedStartTimes(userId, WeekMath.startOf(monday, zone),
+			WeekMath.startOf(monday.plusWeeks(1), zone));
+		List<CoverageDayResponse> days = days(monday, sessionStarts, zone);
 
 		List<RegionCoverageResponse> regions = coverage.regions().stream()
 			.map(region -> toResponse(region, recovering.contains(region.regionId())))
 			.toList();
 		return new CoverageWeekResponse(monday, monday.plusDays(6), coverage.weekPercent(), days, regions);
+	}
+
+	/** The current week's coverage (targets and effective sets per region), in the user's timezone. */
+	@Transactional(readOnly = true)
+	public CoverageResult currentWeek(UUID userId) {
+		ZoneId zone = userTimezone(userId);
+		return coverage(userId, WeekMath.weekStart(Instant.now(), zone), zone, Set.of());
+	}
+
+	/** The regions that are recovering right now (a hard workout in the last 48 hours). */
+	@Transactional(readOnly = true)
+	public Set<String> recoveringRegions(UUID userId) {
+		return recoveringRegions(userId, Instant.now());
+	}
+
+	/**
+	 * The weekPercent of the week (in the user's timezone) that contains {@code moment}, with the given
+	 * sets left out. Leaving out one workout's sets shows what the week looked like without it.
+	 */
+	@Transactional(readOnly = true)
+	public int weekPercent(UUID userId, Instant moment, Set<UUID> leftOutSetIds) {
+		ZoneId zone = userTimezone(userId);
+		return coverage(userId, WeekMath.weekStart(moment, zone), zone, leftOutSetIds).weekPercent();
+	}
+
+	/** Coverage of the week starting on {@code monday}, counting every counted set except the left-out ones. */
+	private CoverageResult coverage(UUID userId, LocalDate monday, ZoneId zone, Set<UUID> leftOutSetIds) {
+		List<CountedSetRegion> rows = coverageRepository.findCountedSetRegions(userId,
+				WeekMath.startOf(monday, zone), WeekMath.startOf(monday.plusWeeks(1), zone)).stream()
+			.filter(row -> !leftOutSetIds.contains(row.setId()))
+			.toList();
+		return CoverageCalculator.calculate(targets(userId), countedSets(rows, zone));
 	}
 
 	/** Checked on the date itself, before any week maths, which could fail on extreme dates. */
@@ -116,11 +146,11 @@ public class CoverageService {
 		return rows.stream().filter(row -> row.role() == role).map(CountedSetRegion::regionId).toList();
 	}
 
-	/** The workouts that finished in the last 48 hours, with the effective sets each one gave every region. */
-	private List<RecentSession> recentSessions(UUID userId, Instant now) {
+	/** Recovering regions, from the workouts that finished in the last 48 hours. */
+	private Set<String> recoveringRegions(UUID userId, Instant now) {
 		List<SessionRegionSets> rows = coverageRepository.findSessionRegionSetsFinishedSince(userId,
 			RecoveryCalculator.windowStart(now));
-		return recentSessions(rows);
+		return RecoveryCalculator.recoveringRegions(recentSessions(rows), now);
 	}
 
 	static List<RecentSession> recentSessions(List<SessionRegionSets> rows) {
