@@ -1,8 +1,7 @@
 // Small helpers shared by every spec. Setup goes through the API (fast);
 // the flow under test always goes through the screens.
 
-// Every user gets the same zone, so test results don't depend on the machine's clock settings.
-const TIMEZONE = "Europe/London";
+import { TIMEZONE } from "./testUser";
 
 Cypress.Commands.add("uniqueEmail", () => {
   // The time plus a random number keeps addresses unique across runs and retries.
@@ -47,4 +46,53 @@ Cypress.Commands.add("apiOnboard", ({ splitType, units, equipment }: OnboardingC
 
 Cypress.Commands.add("byTestId", (id: string) => {
   return cy.get(`[data-testid="${id}"]`);
+});
+
+// Like byTestId, but only elements on screen. Next.js keeps recently visited pages alive
+// (hidden) in the page, so the same test id can exist twice; this skips the hidden copy.
+// A query (not a plain command), so assertions after it retry the whole lookup.
+Cypress.Commands.addQuery("shown", function (id: string) {
+  const getFn = cy.now("get", `[data-testid="${id}"]:visible`) as (subject: unknown) => JQuery<HTMLElement>;
+  return (subject) => getFn(subject);
+});
+
+// Workout setup through the API. Weights are always in kg here, like the API itself.
+
+Cypress.Commands.add("apiStartWorkout", () => {
+  return csrfHeader().then((headers) =>
+    cy.request<WorkoutSession>({ method: "POST", url: "/api/sessions", headers, body: {} }).its("body"),
+  );
+});
+
+Cypress.Commands.add("apiAddExercise", (sessionId: string, exerciseId: string) => {
+  return csrfHeader().then((headers) =>
+    cy
+      .request<WorkoutSession>({ method: "POST", url: `/api/sessions/${sessionId}/exercises`, headers, body: { exerciseId } })
+      .its("body"),
+  );
+});
+
+// Adds a set to the exercise at `position` (starts at 1). With completed: true it is also
+// ticked off, which the API does as a second step (new sets always start un-ticked).
+Cypress.Commands.add("apiAddSet", (sessionId: string, position: number, values: SetSetup) => {
+  const { completed = false, ...body } = values;
+  return csrfHeader().then((headers) =>
+    cy
+      .request<WorkoutSet>({ method: "POST", url: `/api/sessions/${sessionId}/exercises/${position}/sets`, headers, body })
+      .its("body")
+      .then((created) => {
+        if (!completed) {
+          return cy.wrap(created, { log: false });
+        }
+        return cy
+          .request<WorkoutSet>({ method: "PATCH", url: `/api/sets/${created.id}`, headers, body: { completed: true } })
+          .its("body");
+      }),
+  );
+});
+
+Cypress.Commands.add("apiFinish", (sessionId: string) => {
+  return csrfHeader().then((headers) =>
+    cy.request<WorkoutSession>({ method: "POST", url: `/api/sessions/${sessionId}/finish`, headers }).its("body"),
+  );
 });
