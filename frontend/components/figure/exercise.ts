@@ -2,7 +2,8 @@
 import type { RegionValues } from "./BodyFigure";
 import { REGION_IDS, SHAPES, type RegionId, type View } from "./shapes";
 
-function isRegionId(id: string): id is RegionId {
+// True for ids the figure can draw (the API may send ids the figure doesn't know).
+export function isRegionId(id: string): id is RegionId {
   return (REGION_IDS as readonly string[]).includes(id);
 }
 

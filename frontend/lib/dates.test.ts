@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatElapsed, formatSessionDate, formatSessionDay, formatWeekOf } from "./dates";
+import { formatDay, formatElapsed, formatSessionDate, formatSessionDay, formatWeekOf } from "./dates";
 
 describe("formatElapsed", () => {
   it("shows minutes and seconds under an hour", () => {
@@ -40,5 +40,12 @@ describe("session day", () => {
 
   it("adds the month for the detail header", () => {
     expect(formatSessionDate(startedAt, "Europe/Berlin")).toBe("Mon 5 Oct");
+  });
+});
+
+describe("formatDay", () => {
+  it("reads the date as it is", () => {
+    expect(formatDay("2026-10-05")).toBe("Mon 5 Oct");
+    expect(formatDay("2026-12-31")).toBe("Thu 31 Dec");
   });
 });

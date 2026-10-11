@@ -32,7 +32,7 @@ export default function WorkoutActions({ sessionId, hasCompletedSet }: WorkoutAc
       setError(result.error);
       return;
     }
-    router.push(`/history/${sessionId}`);
+    router.push(`/summary/${sessionId}`);
   }
 
   async function discard() {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Session, SessionExercise, WorkoutSet } from "./types";
 import {
   checkAction,
+  firstSetStart,
   hasCompletedSet,
   isEdited,
   nextSetValues,
@@ -31,12 +32,16 @@ const exercise = (sets: WorkoutSet[]): SessionExercise => ({
   targetSets: 3,
   repRange: [6, 10],
   suggestedWeightKg: null,
+  suggestedReps: null,
+  suggestionReason: null,
+  lastTime: null,
   sets,
 });
 
 const session = (exercises: SessionExercise[]): Session => ({
   id: "abc",
   name: "Push",
+  splitDayId: null,
   status: "ACTIVE",
   startedAt: "2026-10-05T10:00:00Z",
   finishedAt: null,
@@ -108,19 +113,37 @@ describe("removeDraft", () => {
   });
 });
 
-describe("nextSetValues", () => {
-  it("starts with an empty bar and the top of the rep range", () => {
-    expect(nextSetValues([], "KG", false, [6, 10])).toEqual({ weightKg: 20, reps: 10, isWarmup: false });
-    expect(nextSetValues([], "LB", false, [6, 10])).toEqual({ weightKg: 20.41, reps: 10, isWarmup: false });
+describe("firstSetStart", () => {
+  it("starts with an empty bar and the top of the rep range without a suggestion", () => {
+    expect(firstSetStart(exercise([]), "KG", false)).toEqual({ weight: 20, reps: 10 });
+    expect(firstSetStart(exercise([]), "LB", false)).toEqual({ weight: 45, reps: 10 });
   });
 
-  it("starts at 0 for bodyweight exercises", () => {
-    expect(nextSetValues([], "KG", true, [8, 15]).weightKg).toBe(0);
+  it("starts at 0 for bodyweight exercises without a suggestion", () => {
+    expect(firstSetStart(exercise([]), "KG", true).weight).toBe(0);
+  });
+
+  it("uses the suggested weight and reps, rounding lb to the 5 lb step", () => {
+    const suggested = { ...exercise([]), suggestedWeightKg: 63.73, suggestedReps: 6 };
+    expect(firstSetStart(suggested, "KG", false)).toEqual({ weight: 63.73, reps: 6 });
+    expect(firstSetStart(suggested, "LB", false)).toEqual({ weight: 140, reps: 6 });
+  });
+
+  it("keeps a suggested 0 (bodyweight) instead of falling back to an empty bar", () => {
+    const suggested = { ...exercise([]), suggestedWeightKg: 0, suggestedReps: 13 };
+    expect(firstSetStart(suggested, "KG", false)).toEqual({ weight: 0, reps: 13 });
+  });
+});
+
+describe("nextSetValues", () => {
+  it("uses the start values for the first set, in kg", () => {
+    expect(nextSetValues([], "KG", { weight: 20, reps: 10 })).toEqual({ weightKg: 20, reps: 10, isWarmup: false });
+    expect(nextSetValues([], "LB", { weight: 45, reps: 10 })).toEqual({ weightKg: 20.41, reps: 10, isWarmup: false });
   });
 
   it("copies the last row's values on screen, but not the warm-up flag", () => {
     const last = { ...toDraft(set(1, { isWarmup: true }), "KG"), weight: 62.5, reps: 6 };
-    expect(nextSetValues([toDraft(set(1), "KG"), last], "KG", false, [6, 10])).toEqual({
+    expect(nextSetValues([toDraft(set(1), "KG"), last], "KG", { weight: 20, reps: 10 })).toEqual({
       weightKg: 62.5,
       reps: 6,
       isWarmup: false,

@@ -1,8 +1,9 @@
-import { getActiveSession, getHistory, getRegions, getSettings, getWeekCoverage } from "@/lib/api";
+import { getActiveSession, getHistory, getRecommendation, getRegions, getSettings, getWeekCoverage } from "@/lib/api";
 import { formatWeekOf } from "@/lib/dates";
 import { guardPage } from "@/lib/guard";
 import { buildDayStrip, dateInZone } from "@/lib/week";
 import DayStrip from "./DayStrip";
+import NextUp from "./NextUp";
 import StartWorkoutButton from "./StartWorkoutButton";
 import WeekFigure from "./WeekFigure";
 import WeekSessions from "./WeekSessions";
@@ -20,6 +21,9 @@ export default async function HomePage() {
     getHistory(1), // the current week's workouts, with names and set counts for the list
     getActiveSession(),
   ]);
+
+  // The next workout only matters when none is in progress (then Home shows RESUME alone).
+  const recommendation = active ? null : await getRecommendation();
 
   // "Today" on the user's own calendar, not the server's.
   const today = dateInZone(new Date(), settings.timezone);
@@ -39,10 +43,10 @@ export default async function HomePage() {
       </header>
       <DayStrip days={buildDayStrip(coverage.days, today)} />
       <WeekFigure coverage={coverage.regions} catalog={catalog} />
-      {/* Next.js keeps visited pages alive in the background. The key starts the button fresh
-          (not stuck on "busy") whenever the workout in progress changes. */}
-      <StartWorkoutButton key={active?.id ?? "none"} hasActive={active !== null} />
+      {recommendation && <NextUp recommendation={recommendation} />}
+      <StartWorkoutButton hasActive={active !== null} />
       <WeekSessions sessions={weekSessions} timeZone={settings.timezone} />
     </div>
   );
 }
+

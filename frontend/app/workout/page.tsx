@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import BackLink from "@/components/BackLink";
-import { getActiveSession } from "@/lib/api";
+import { viewOf } from "@/components/figure/exercise";
+import { getActiveSession, getWeekCoverage } from "@/lib/api";
 import { guardPage } from "@/lib/guard";
+import { planFromExercises, toRegionValues } from "@/lib/plan";
 import { hasCompletedSet } from "@/lib/workout";
 import ExerciseRow from "./ExerciseRow";
 import Timer from "./Timer";
 import WorkoutActions from "./WorkoutActions";
+import WorkoutFigure from "./WorkoutFigure";
 
 export const metadata: Metadata = { title: "Workout · Fiber" };
 
@@ -16,11 +19,13 @@ export const instant = false;
 
 export default async function WorkoutPage() {
   await guardPage("/");
-  const session = await getActiveSession();
+  const [session, coverage] = await Promise.all([getActiveSession(), getWeekCoverage()]);
   // Nothing in progress (finished, discarded, or never started): Home offers START.
   if (!session) {
     redirect("/");
   }
+  const week = toRegionValues(Object.fromEntries(coverage.regions.map((region) => [region.regionId, region.coverage])));
+  const firstMainRegion = session.exercises[0]?.primary[0];
 
   return (
     <div className="grid gap-5">
@@ -31,6 +36,12 @@ export default async function WorkoutPage() {
         </h1>
         <Timer startedAt={session.startedAt} />
       </header>
+
+      <WorkoutFigure
+        week={week}
+        plan={planFromExercises(session.exercises)}
+        firstView={firstMainRegion ? viewOf(firstMainRegion) : "front"}
+      />
 
       {/* Varsity double-rule stripe. */}
       <div className="h-2.5 shrink-0 border-y-[3px] border-acc" />

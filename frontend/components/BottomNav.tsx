@@ -13,9 +13,15 @@ const NAV_ITEMS = [
 // The nav already knows the current path, so hiding it here is simpler than a second layout.
 const HIDDEN_ON = ["/login", "/onboarding"];
 
-// A workout in progress gets the whole screen too, on every /workout page.
+// A workout in progress gets the whole screen too, on every /workout page, and so does the
+// summary after it (its DONE button leads Home).
 function isHidden(pathname: string): boolean {
-  return HIDDEN_ON.includes(pathname) || pathname === "/workout" || pathname.startsWith("/workout/");
+  return (
+    HIDDEN_ON.includes(pathname) ||
+    pathname === "/workout" ||
+    pathname.startsWith("/workout/") ||
+    pathname.startsWith("/summary/")
+  );
 }
 
 // "/" would match every path with startsWith, so Home only matches exactly.

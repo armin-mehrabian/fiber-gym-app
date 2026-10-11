@@ -35,3 +35,9 @@ export function formatSessionDate(isoTimestamp: string, timeZone: string): strin
     new Date(isoTimestamp),
   );
 }
+
+// A day from the API ("2026-10-05", already the user's calendar day) → "Mon 5 Oct".
+export function formatDay(date: string): string {
+  // Noon UTC on that date, read in UTC: the same calendar day whatever the server's timezone.
+  return formatSessionDate(`${date}T12:00:00Z`, "UTC");
+}

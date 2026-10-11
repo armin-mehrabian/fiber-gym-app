@@ -15,13 +15,13 @@ type SetLoggerProps = {
   sessionId: string;
   exercise: SessionExercise;
   units: Units;
-  bodyweight: boolean; // no equipment needed: the first set starts at 0
+  firstSet: { weight: number; reps: number }; // where the first new set starts, in the user's units
 };
 
 // Which "are you sure?" is open, if any. Only one at a time, so there is only one YES on screen.
 type Confirm = "last-set" | "exercise" | null;
 
-export default function SetLogger({ sessionId, exercise, units, bodyweight }: SetLoggerProps) {
+export default function SetLogger({ sessionId, exercise, units, firstSet }: SetLoggerProps) {
   const router = useRouter();
   const [drafts, setDrafts] = useState<SetDraft[]>(() => exercise.sets.map((set) => toDraft(set, units)));
   const [busy, setBusy] = useState(false);
@@ -79,7 +79,7 @@ export default function SetLogger({ sessionId, exercise, units, bodyweight }: Se
   }
 
   async function handleAdd() {
-    const values = nextSetValues(drafts, units, bodyweight, exercise.repRange);
+    const values = nextSetValues(drafts, units, firstSet);
     const result = await run(addSet(sessionId, exercise.position, values));
     if (result.ok) {
       const created = result.data;

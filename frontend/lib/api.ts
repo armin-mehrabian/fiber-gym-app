@@ -6,13 +6,18 @@
 // - Browser helpers (login, saveSettings, …) run in client components. They call the relative
 //   "/api/..." path (proxied to the backend by next.config.ts), so the browser sends the cookies itself.
 import type {
+  Alternative,
   ApiError,
   ApiResult,
   Equipment,
   Exercise,
+  ExerciseDetail,
+  ExerciseHistoryEntry,
   HistoryWeek,
+  Recommendation,
   Region,
   Session,
+  SessionSummary,
   SetChanges,
   SetValues,
   Settings,
@@ -131,13 +136,42 @@ export function getMyExercises(query: string): Promise<Exercise[]> {
   return serverGetJson<Exercise[]>(`/api/exercises?mine=true${search}`);
 }
 
-// One catalog exercise. Only used for a nicer default weight, so a failure gives null instead of an error page.
-export async function getExercise(id: string): Promise<Exercise | null> {
-  try {
-    return await serverGetJson<Exercise>(`/api/exercises/${encodeURIComponent(id)}`);
-  } catch {
+// One catalog exercise with the user's best and last time, or null if the id is unknown (404).
+export async function getExercise(id: string): Promise<ExerciseDetail | null> {
+  const path = `/api/exercises/${encodeURIComponent(id)}`;
+  const response = await serverGet(path);
+  if (response.status === 404) {
     return null;
   }
+  if (!response.ok) {
+    throw new Error(`GET ${path} failed with status ${response.status}`);
+  }
+  return (await response.json()) as ExerciseDetail;
+}
+
+// The user's finished workouts with this exercise, newest first.
+export function getExerciseHistory(id: string): Promise<ExerciseHistoryEntry[]> {
+  return serverGetJson<ExerciseHistoryEntry[]>(`/api/exercises/${encodeURIComponent(id)}/history`);
+}
+
+// The next split day and the exercises that fill this week's gaps.
+export function getRecommendation(): Promise<Recommendation> {
+  return serverGetJson<Recommendation>("/api/recommendation/next");
+}
+
+// Up to 5 exercises that could replace this one, best match first.
+// An empty workout has no split day; then the parameter is left out.
+export function getAlternatives(exerciseId: string, splitDayId: string | null): Promise<Alternative[]> {
+  const params = new URLSearchParams({ exerciseId });
+  if (splitDayId) {
+    params.set("splitDayId", splitDayId);
+  }
+  return serverGetJson<Alternative[]>(`/api/recommendation/alternatives?${params}`);
+}
+
+// What a finished workout did. Only call it for FINISHED workouts (the backend answers 409 otherwise).
+export function getSessionSummary(id: string): Promise<SessionSummary> {
+  return serverGetJson<SessionSummary>(`/api/sessions/${encodeURIComponent(id)}/summary`);
 }
 
 // ---------------------------------------------------------------- browser helpers
@@ -246,6 +280,17 @@ export function saveTargets(changes: Target[]): Promise<ApiResult<Target[]>> {
 // Starts an empty workout. 409 if one is already in progress.
 export function startSession(): Promise<ApiResult<Session>> {
   return send<Session>("POST", "/api/sessions", {});
+}
+
+// Starts the recommended workout: the split day plus its exercises, in order. 409 if one is already in progress.
+export function startRecommended(splitDayId: string, exerciseIds: string[]): Promise<ApiResult<Session>> {
+  const exercises = exerciseIds.map((exerciseId) => ({ exerciseId }));
+  return send<Session>("POST", "/api/sessions", { splitDayId, exercises });
+}
+
+// Replaces the exercise at a position (only allowed while it has no sets; 409 otherwise).
+export function swapExercise(sessionId: string, position: number, exerciseId: string): Promise<ApiResult<Session>> {
+  return send<Session>("PUT", `/api/sessions/${sessionId}/exercises/${position}`, { exerciseId });
 }
 
 export function addExercise(sessionId: string, exerciseId: string): Promise<ApiResult<Session>> {

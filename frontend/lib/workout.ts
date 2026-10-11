@@ -1,4 +1,5 @@
 // Pure helpers for the workout and set-logging screens (no React, easy to test).
+import { suggestedDisplayWeight } from "@/lib/progress";
 import { firstSetWeight, toDisplayWeight, toKg } from "@/lib/units";
 import type { Session, SessionExercise, SetValues, Units, WorkoutSet } from "@/lib/types";
 
@@ -55,18 +56,31 @@ export function removeDraft(drafts: SetDraft[], setId: string): SetDraft[] {
     .map((draft, index) => ({ ...draft, set: { ...draft.set, setNumber: index + 1 } }));
 }
 
-// Values for a new set: a copy of the last row's on-screen values, or the starting values
-// (empty bar or bodyweight, reps at the top of the range) for the first set.
+// Where the first set of an exercise starts, in the user's units: the backend's suggestion when
+// there is one, otherwise an empty bar (or bodyweight) with reps at the top of the range.
+export function firstSetStart(
+  exercise: SessionExercise,
+  units: Units,
+  bodyweight: boolean,
+): { weight: number; reps: number } {
+  const weight =
+    exercise.suggestedWeightKg !== null
+      ? suggestedDisplayWeight(exercise.suggestedWeightKg, units)
+      : firstSetWeight(units, bodyweight);
+  const reps = exercise.suggestedReps ?? exercise.repRange[1];
+  return { weight, reps };
+}
+
+// Values for a new set: a copy of the last row's on-screen values, or `start` for the first set.
 // isWarmup is never copied: sets added after a warm-up are usually working sets.
 export function nextSetValues(
   drafts: SetDraft[],
   units: Units,
-  bodyweight: boolean,
-  repRange: [number, number],
+  start: { weight: number; reps: number },
 ): SetValues {
   const last = drafts[drafts.length - 1];
-  const weight = last ? last.weight : firstSetWeight(units, bodyweight);
-  const reps = last ? last.reps : repRange[1];
+  const weight = last ? last.weight : start.weight;
+  const reps = last ? last.reps : start.reps;
   return { weightKg: toKg(weight, units), reps, isWarmup: false };
 }
 

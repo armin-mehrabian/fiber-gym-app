@@ -71,6 +71,23 @@ export type Exercise = {
   cue: string;
 };
 
+// Why a weight/reps suggestion was made (the backend's progression rule):
+// NO_HISTORY = first time, INCREASE = every set hit the top of the range,
+// REPEAT = same weight, one more rep, MORE_REPS = bodyweight, one more rep.
+export type SuggestionReason = "NO_HISTORY" | "INCREASE" | "REPEAT" | "MORE_REPS";
+
+// One completed working set from an earlier workout.
+export type PastSet = {
+  weightKg: number;
+  reps: number;
+};
+
+// The completed working sets of the last finished workout with an exercise.
+export type LastTime = {
+  date: string;
+  sets: PastSet[];
+};
+
 // One logged set. Weights are always kg in the API.
 export type WorkoutSet = {
   id: string;
@@ -90,7 +107,10 @@ export type SessionExercise = {
   secondary: string[];
   targetSets: number;
   repRange: [number, number];
-  suggestedWeightKg: number | null;
+  suggestedWeightKg: number | null; // null = no suggestion (e.g. first time)
+  suggestedReps: number | null;
+  suggestionReason: SuggestionReason | null; // null for exercises saved before suggestions existed
+  lastTime: LastTime | null; // only filled while the workout is in progress
   sets: WorkoutSet[];
 };
 
@@ -100,6 +120,7 @@ export type SessionStatus = "ACTIVE" | "FINISHED";
 export type Session = {
   id: string;
   name: string;
+  splitDayId: string | null; // null for an empty workout started without a split day
   status: SessionStatus;
   startedAt: string; // ISO timestamp
   finishedAt: string | null;
@@ -160,6 +181,77 @@ export type WeekCoverage = {
   weekPercent: number; // whole number 0–100
   days: CoverageDay[]; // 7 entries, Monday first
   regions: RegionCoverage[]; // all regions, in region order
+};
+
+// One exercise of GET /api/recommendation/next.
+export type RecommendedExercise = {
+  exerciseId: string;
+  name: string;
+  primary: string[];
+  secondary: string[];
+  sets: number;
+  repRange: [number, number];
+  suggestedWeightKg: number | null;
+  suggestedReps: number | null;
+  suggestionReason: SuggestionReason | null;
+};
+
+// GET /api/recommendation/next: the next split day and the exercises that fill this week's gaps.
+export type Recommendation = {
+  splitDayId: string;
+  name: string; // e.g. "Pull"
+  exercises: RecommendedExercise[]; // empty when the week is already covered
+  planned: Record<string, number>; // region id → 1 (main region) or 0.5 (helping region)
+};
+
+// One option of GET /api/recommendation/alternatives, best match first.
+export type Alternative = {
+  exerciseId: string;
+  name: string;
+  primary: string[];
+  secondary: string[];
+  similarity: number; // 0..1, not shown on screen
+};
+
+// The user's best set ever for an exercise (highest estimated 1RM).
+export type BestSet = {
+  weightKg: number;
+  reps: number;
+  date: string;
+};
+
+// GET /api/exercises/{id}: the catalog entry plus the user's best and last time (null for visitors).
+export type ExerciseDetail = Exercise & {
+  note: string | null;
+  best: BestSet | null;
+  last: LastTime | null;
+};
+
+// One finished workout in GET /api/exercises/{id}/history (newest first).
+export type ExerciseHistoryEntry = {
+  sessionId: string;
+  date: string;
+  sets: (PastSet & { isWarmup: boolean })[];
+};
+
+// One personal best in a workout summary.
+export type PersonalBest = {
+  exerciseId: string;
+  name: string;
+  weightKg: number;
+  reps: number;
+};
+
+// GET /api/sessions/{id}/summary: what a finished workout did.
+export type SessionSummary = {
+  sessionId: string;
+  name: string;
+  durationMinutes: number;
+  workingSets: number;
+  regionsHit: Record<string, number>; // region id → 1 or 0.5
+  weekPercentBefore: number;
+  weekPercentAfter: number;
+  personalBests: PersonalBest[]; // empty when there were none
 };
 
 // A failed request: the backend's { error, fields } reply plus the HTTP status.
