@@ -1,11 +1,5 @@
 // Types that mirror the backend API contract (JSON, camelCase).
 
-// GET /api/health
-export type Health = {
-  status: "ok" | "degraded";
-  database: "up" | "down";
-};
-
 // GET /api/me, and the reply of signup and login.
 export type User = {
   id: string;
@@ -134,6 +128,38 @@ export type HistorySession = {
 export type HistoryWeek = {
   weekStart: string; // "YYYY-MM-DD", a Monday
   sessions: HistorySession[];
+};
+
+// One (exercise, day) behind a region's weekly sets in GET /api/coverage/week.
+export type Contribution = {
+  exerciseName: string;
+  day: string; // short weekday in the user's timezone: "Mon" … "Sun"
+  sets: number; // effective sets it gave, e.g. 3 or 1.5
+};
+
+// One region's week: effective sets (primary = 1 per set, secondary = 0.5) against its target.
+export type RegionCoverage = {
+  regionId: string;
+  effective: number; // at most 1 decimal, e.g. 4.5
+  target: number; // the user's weekly target
+  coverage: number; // 0..1 (0 when the target is 0)
+  recovering: boolean; // trained hard (3+ effective sets in one workout) in the last 48 hours
+  contributions: Contribution[]; // sorted by day, then exercise name; empty when untrained
+};
+
+// One day of the week and how many finished workouts started on it.
+export type CoverageDay = {
+  date: string; // "YYYY-MM-DD"
+  sessions: number;
+};
+
+// GET /api/coverage/week: one Monday–Sunday week in the user's timezone.
+export type WeekCoverage = {
+  weekStart: string; // "YYYY-MM-DD", a Monday
+  weekEnd: string; // "YYYY-MM-DD", the Sunday
+  weekPercent: number; // whole number 0–100
+  days: CoverageDay[]; // 7 entries, Monday first
+  regions: RegionCoverage[]; // all regions, in region order
 };
 
 // A failed request: the backend's { error, fields } reply plus the HTTP status.

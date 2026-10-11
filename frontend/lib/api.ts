@@ -10,7 +10,6 @@ import type {
   ApiResult,
   Equipment,
   Exercise,
-  Health,
   HistoryWeek,
   Region,
   Session,
@@ -20,6 +19,7 @@ import type {
   SettingsUpdate,
   Target,
   User,
+  WeekCoverage,
   WorkoutSet,
 } from "@/lib/types";
 
@@ -32,25 +32,6 @@ function apiUrl(path: string): string {
 }
 
 // ---------------------------------------------------------------- server helpers
-
-// Returns null when the backend can't be reached, so pages still render instead of crashing.
-export async function getHealth(): Promise<Health | null> {
-  try {
-    const response = await fetch(apiUrl("/api/health"), {
-      cache: "no-store",
-      // Give up after 3s so a hanging backend shows OFFLINE instead of loading forever.
-      signal: AbortSignal.timeout(3000),
-    });
-    // 503 is still a real Health reply ("degraded" / "down"); any other error status is not.
-    if (!response.ok && response.status !== 503) {
-      return null;
-    }
-    return (await response.json()) as Health;
-  } catch {
-    // Network error, timeout, or a reply that isn't JSON.
-    return null;
-  }
-}
 
 // GET from the backend on behalf of the visitor: their cookies (the session) go along.
 async function serverGet(path: string): Promise<Response> {
@@ -136,6 +117,11 @@ export async function getSession(id: string): Promise<Session | null> {
 // Finished workouts grouped by week, newest first.
 export function getHistory(weeks = 12): Promise<HistoryWeek[]> {
   return serverGetJson<HistoryWeek[]>(`/api/history?weeks=${weeks}`);
+}
+
+// This week's coverage per region (the backend picks the week in the user's timezone).
+export function getWeekCoverage(): Promise<WeekCoverage> {
+  return serverGetJson<WeekCoverage>("/api/coverage/week");
 }
 
 // Exercises the user's equipment allows, optionally filtered by name.

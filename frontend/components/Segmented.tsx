@@ -28,7 +28,7 @@ export default function Segmented<T extends string>({
             disabled={disabled}
             aria-pressed={active}
             data-testid={`${testIdPrefix}${option}`}
-            className={`min-h-11 min-w-[62px] px-3 text-[0.85rem] font-bold ${
+            className={`min-h-11 min-w-[62px] px-3 text-[0.85rem] font-bold uppercase ${
               active ? "bg-acc text-on-acc" : "text-mut"
             }`}
           >
