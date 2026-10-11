@@ -85,7 +85,13 @@ describe("Workout", () => {
       .its("body.id")
       .then((sessionId: string) => {
         cy.shown("finish-workout").click();
-        cy.location("pathname").should("eq", `/history/${sessionId}`);
+        cy.location("pathname").should("eq", `/summary/${sessionId}`);
+        cy.shown("summary-title").should("have.text", "Workout · Done");
+        // A first attempt at an exercise is never a new best.
+        cy.get('[data-testid^="summary-pr-"]').should("not.exist");
+
+        // Every set is kept in the history, warm-up included.
+        cy.visit(`/history/${sessionId}`);
       });
     cy.shown("session-detail-exercise-1").should("contain.text", "Barbell bench press");
     cy.shown("session-detail-set-1-1").should("have.text", "W 20 × 10");
@@ -190,9 +196,11 @@ describe("Workout", () => {
     cy.shown("finish-workout").click();
     cy.shown("confirm-yes").click();
     cy.get<string>("@sessionId").then((sessionId) => {
-      cy.location("pathname").should("eq", `/history/${sessionId}`);
+      cy.location("pathname").should("eq", `/summary/${sessionId}`);
+      cy.shown("summary-title").should("have.text", "Workout · Done");
+      // The un-ticked set is still listed in the workout's history.
+      cy.visit(`/history/${sessionId}`);
     });
-    // The un-ticked set is still listed in the summary.
     cy.shown("session-detail-set-1-1").should("have.text", "60 × 8");
     cy.request("/api/sessions/active").its("status").should("eq", 204);
   });
@@ -245,7 +253,7 @@ describe("Workout", () => {
         .then(Number)
         .should("be.closeTo", 22.68, 0.001);
 
-      // The summary shows pounds too.
+      // The history shows pounds too.
       cy.apiFinish(sessionId);
       cy.visit(`/history/${sessionId}`);
     });

@@ -58,9 +58,10 @@ Cypress.Commands.addQuery("shown", function (id: string) {
 
 // Workout setup through the API. Weights are always in kg here, like the API itself.
 
-Cypress.Commands.add("apiStartWorkout", () => {
+// Without a plan it's an empty workout; with one (split day + exercises) it's like tapping START on NEXT UP.
+Cypress.Commands.add("apiStartWorkout", (plan: WorkoutPlan = {}) => {
   return csrfHeader().then((headers) =>
-    cy.request<WorkoutSession>({ method: "POST", url: "/api/sessions", headers, body: {} }).its("body"),
+    cy.request<WorkoutSession>({ method: "POST", url: "/api/sessions", headers, body: plan }).its("body"),
   );
 });
 

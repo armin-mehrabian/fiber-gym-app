@@ -36,6 +36,12 @@ type WorkoutSession = {
   exercises: SessionExercise[];
 };
 
+// What a new workout starts with: a split day and exercises in order (both optional).
+type WorkoutPlan = {
+  splitDayId?: string;
+  exercises?: { exerciseId: string }[];
+};
+
 // A set to create in a test. completed: true also ticks it off (default: not ticked).
 type SetSetup = {
   weightKg: number;
@@ -61,8 +67,8 @@ declare namespace Cypress {
     /** Like byTestId, but only the elements on screen (skips pages Next.js keeps hidden). */
     shown(id: string): Chainable<JQuery<HTMLElement>>;
 
-    /** Starts an empty workout through the API and yields it. */
-    apiStartWorkout(): Chainable<WorkoutSession>;
+    /** Starts a workout through the API (empty, or with a plan) and yields it. */
+    apiStartWorkout(plan?: WorkoutPlan): Chainable<WorkoutSession>;
 
     /** Adds an exercise (by id, e.g. "barbell_curl") to the end of the workout; yields the workout. */
     apiAddExercise(sessionId: string, exerciseId: string): Chainable<WorkoutSession>;

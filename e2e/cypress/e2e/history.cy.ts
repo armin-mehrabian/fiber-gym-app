@@ -87,6 +87,7 @@ describe("History", () => {
   it("a user with no finished workouts sees the empty history", () => {
     cy.visit("/history");
     cy.shown("nav-history").should("have.attr", "aria-current", "page");
+    cy.shown("history-empty").should("be.visible");
     cy.get('[data-testid^="history-week-"]').should("not.exist");
     cy.get('[data-testid^="history-session-"]').should("not.exist");
   });
