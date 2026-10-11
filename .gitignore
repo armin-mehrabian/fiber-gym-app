@@ -20,7 +20,7 @@ npm-debug.log*
 node_modules/
 .next/
 out/
-coverage/
+/frontend/coverage/
 *.tsbuildinfo
 next-env.d.ts
 
