@@ -81,7 +81,9 @@ describe("Plan", () => {
         .its("body")
         .then((alternatives) => {
           const current = planText(recommendation.exercises);
-          const changing = alternatives.find(
+          // The swap screen hides exercises that are already in the workout, so skip those too.
+          const inWorkout = new Set(recommendation.exercises.map(({ exerciseId }) => exerciseId));
+          const changing = alternatives.filter(({ exerciseId }) => !inWorkout.has(exerciseId)).find(
             (alternative) => planText([alternative, ...recommendation.exercises.slice(1)]) !== current,
           );
           expect(changing, "an alternative that changes the plan").to.not.equal(undefined);
