@@ -24,6 +24,9 @@ type SessionExercise = {
   exerciseId: string;
   name: string;
   targetSets: number;
+  repRange: [number, number];
+  suggestedWeightKg: number | null;
+  suggestedReps: number | null;
   sets: WorkoutSet[];
 };
 
@@ -48,6 +51,19 @@ type SetSetup = {
   reps: number;
   isWarmup: boolean;
   completed?: boolean;
+};
+
+// What one tap on ✓ DONE logs: `sets` finished working sets of weightKg × reps.
+type CompleteValues = {
+  weightKg: number;
+  reps: number;
+  sets: number;
+};
+
+// One region's weekly target, e.g. { regionId: "chest_upper", weeklySets: 4 }.
+type RegionTarget = {
+  regionId: string;
+  weeklySets: number;
 };
 
 declare namespace Cypress {
@@ -78,5 +94,11 @@ declare namespace Cypress {
 
     /** Finishes the workout through the API; yields it. */
     apiFinish(sessionId: string): Chainable<WorkoutSession>;
+
+    /** Logs finished working sets for the exercise at `position` in one go (like ✓ DONE); yields the workout. */
+    apiCompleteExercise(sessionId: string, position: number, values: CompleteValues): Chainable<WorkoutSession>;
+
+    /** Changes the given weekly targets through the API; yields all 26 targets. */
+    apiSetTargets(targets: RegionTarget[]): Chainable<RegionTarget[]>;
   }
 }

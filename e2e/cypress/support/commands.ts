@@ -97,3 +97,25 @@ Cypress.Commands.add("apiFinish", (sessionId: string) => {
     cy.request<WorkoutSession>({ method: "POST", url: `/api/sessions/${sessionId}/finish`, headers }).its("body"),
   );
 });
+
+// Logs `sets` finished working sets with the same weight and reps for the exercise at `position`,
+// in one request: what the ✓ DONE button on a workout row does.
+Cypress.Commands.add("apiCompleteExercise", (sessionId: string, position: number, values: CompleteValues) => {
+  return csrfHeader().then((headers) =>
+    cy
+      .request<WorkoutSession>({
+        method: "POST",
+        url: `/api/sessions/${sessionId}/exercises/${position}/complete`,
+        headers,
+        body: values,
+      })
+      .its("body"),
+  );
+});
+
+// Changes some weekly targets (sets per week per region); the others keep their values.
+Cypress.Commands.add("apiSetTargets", (targets: RegionTarget[]) => {
+  return csrfHeader().then((headers) =>
+    cy.request<RegionTarget[]>({ method: "PUT", url: "/api/targets", headers, body: targets }).its("body"),
+  );
+});

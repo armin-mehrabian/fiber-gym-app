@@ -74,11 +74,13 @@ describe("Workout", () => {
     cy.shown("set-done-3").click();
     cy.shown("set-done-3").should("have.attr", "aria-pressed", "true");
 
-    // Back on the workout: 2 working sets done (the warm-up doesn't count) of 3.
+    // Back on the workout: 3 ticked sets, but the warm-up doesn't count, so 2 of the 3 planned
+    // working sets are done and the row is still open.
     cy.shown("log-done").click();
     cy.location("pathname").should("eq", "/workout");
-    cy.shown("exercise-row-1").should("contain.text", "2/3");
-    cy.shown("exercise-row-2").should("contain.text", "0/3");
+    cy.shown("exercise-row-1").should("have.attr", "data-done", "false");
+    cy.shown("exercise-done-1").should("be.visible");
+    cy.shown("exercise-row-2").should("have.attr", "data-done", "false");
 
     // Finish: sets were done, so there is no question, and the summary opens.
     cy.request<WorkoutSession>("/api/sessions/active")

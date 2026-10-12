@@ -10,8 +10,6 @@ const RDL = "romanian_deadlift";
 
 type Exercise = { name: string; cue: string };
 
-type Summary = { weekPercentBefore: number; weekPercentAfter: number };
-
 // A finished workout of one exercise where every working set hit 12 reps; yields the workout.
 function apiFinishedAllTwelves(exerciseId: string, weightKg: number): Cypress.Chainable<WorkoutSession> {
   return cy.apiStartWorkout().then((session) => {
@@ -81,6 +79,8 @@ describe("Progress", () => {
     });
     cy.shown("summary-title").should("have.text", "Workout · Done");
     cy.get('[data-testid^="summary-pr-"]').should("not.exist");
+    // One set finishes no region for the week, which still counts as a good day.
+    cy.shown("summary-lit").should("have.text", "Kept the lights on");
   });
 
   it("beating an earlier best shows a new best on the summary, and DONE goes home", () => {
@@ -106,17 +106,11 @@ describe("Progress", () => {
       cy.location("pathname").should("eq", `/summary/${sessionId}`);
       cy.shown("summary-title").should("have.text", "Workout · Done");
       cy.shown("summary-figure").should("be.visible");
-      // The week line shows the backend's before and after numbers.
-      cy.request<Summary>(`/api/sessions/${sessionId}/summary`)
-        .its("body")
-        .then((summary) => {
-          expect(summary.weekPercentAfter).to.be.greaterThan(summary.weekPercentBefore);
-          cy.shown("summary-week").should(
-            "have.text",
-            `Week ${summary.weekPercentBefore}% → ${summary.weekPercentAfter}%`,
-          );
-        });
     });
+    // Last workout's 3 sets plus this one reach the biceps' weekly target (4), so both heads light up.
+    // The summary names them in words; the old week percentage line is gone.
+    cy.shown("summary-lit").should("have.text", "Lit up: Biceps, long head · Biceps, short head");
+    cy.shown("summary-week").should("not.exist");
     cy.shown(`summary-pr-${CURL}`).should("contain.text", "New best · Barbell curl · 32.5 × 10");
 
     cy.shown("summary-done").click();

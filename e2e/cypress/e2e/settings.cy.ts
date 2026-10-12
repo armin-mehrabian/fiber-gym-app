@@ -59,7 +59,8 @@ describe("Settings", () => {
   it("raising a weekly target and saving keeps the new value after a reload", () => {
     cy.intercept("PUT", "/api/targets").as("saveTargets");
     cy.visit("/settings");
-    cy.byTestId("settings-targets-link").should("be.visible").click();
+    // Targets are a detail most users never need, so the link says so.
+    cy.byTestId("settings-targets-link").should("be.visible").and("contain.text", "Advanced: weekly targets").click();
     cy.location("pathname").should("eq", "/settings/targets");
 
     cy.byTestId("target-value-delt_rear")

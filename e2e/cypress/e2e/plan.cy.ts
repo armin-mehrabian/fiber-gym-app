@@ -14,9 +14,22 @@ type Recommendation = {
   splitDayId: string;
   name: string;
   exercises: PlannedExercise[];
+  planned: Record<string, number>; // region id → 1 (main) or 0.5 (helping)
 };
 
 type Alternative = PlannedExercise;
+
+type Region = { id: string; name: string; order: number };
+
+// The "Fills …" line on NEXT UP: up to 3 main regions of the plan, in region order.
+function fillsText(planned: Record<string, number>, regions: Region[]): string {
+  const names = [...regions]
+    .sort((a, b) => a.order - b.order)
+    .filter((region) => planned[region.id] === 1)
+    .slice(0, 3)
+    .map((region) => region.name);
+  return `Fills ${names.join(" · ")}`;
+}
 
 // The regions a list of exercises plans to hit: 1 for a main region, 0.5 for a helping one,
 // written as text so two plans can be compared.
@@ -44,6 +57,14 @@ describe("Plan", () => {
     cy.shown("next-up").should("be.visible");
     cy.shown("next-up-name").should("have.text", "Push");
     cy.shown("next-up-covered").should("not.exist");
+    // It says which regions the day would fill, in words.
+    cy.request<Region[]>("/api/regions")
+      .its("body")
+      .then((regions) => {
+        cy.get<Recommendation>("@recommendation").then((recommendation) => {
+          cy.shown("next-up-fills").should("have.text", fillsText(recommendation.planned, regions));
+        });
+      });
     // An empty workout can still be started from the quiet button below.
     cy.shown("start-workout").should("be.visible");
 
