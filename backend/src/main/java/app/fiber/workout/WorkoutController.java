@@ -89,6 +89,13 @@ public class WorkoutController {
 		return workoutService.addSet(user.getId(), id, position, body);
 	}
 
+	/** One tap: logs this many completed working sets with the same weight and reps, after any existing sets. */
+	@PostMapping("/sessions/{id}/exercises/{position}/complete")
+	public SessionResponse completeExercise(@AuthenticationPrincipal AccountUser user, @PathVariable UUID id,
+			@PathVariable int position, @Valid @RequestBody CompleteExerciseRequest body) {
+		return workoutService.completeExercise(user.getId(), id, position, body);
+	}
+
 	@PatchMapping("/sets/{setId}")
 	public SetResponse updateSet(@AuthenticationPrincipal AccountUser user, @PathVariable UUID setId,
 			@Valid @RequestBody SetUpdateRequest body) {

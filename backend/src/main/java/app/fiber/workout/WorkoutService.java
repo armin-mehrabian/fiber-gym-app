@@ -200,6 +200,21 @@ public class WorkoutService {
 		return SetResponse.from(set);
 	}
 
+	/**
+	 * One-tap logging: appends {@code sets} completed working sets (not warm-ups) with the same weight
+	 * and reps, numbered after any sets the exercise already has. All of them are saved together or not at all.
+	 */
+	@Transactional
+	public SessionResponse completeExercise(UUID userId, UUID sessionId, int position,
+			CompleteExerciseRequest request) {
+		WorkoutSession session = findOwnActiveSession(userId, sessionId);
+		SessionExercise exercise = findExercise(session, position);
+		exercise.addCompletedSets(request.weightKg(), request.reps(), request.sets(), now());
+		// Saves the new sets now, so they have their ids in the answer.
+		sessionRepository.flush();
+		return toResponse(session);
+	}
+
 	/** Changes only the fields that were sent. */
 	@Transactional
 	public SetResponse updateSet(UUID userId, UUID setId, SetUpdateRequest request) {

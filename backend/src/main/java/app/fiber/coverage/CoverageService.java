@@ -1,5 +1,7 @@
 package app.fiber.coverage;
 
+import app.fiber.catalog.Region;
+import app.fiber.catalog.RegionRepository;
 import app.fiber.catalog.RegionRole;
 import app.fiber.common.BadRequestException;
 import app.fiber.common.NotFoundException;
@@ -44,12 +46,14 @@ public class CoverageService {
 	private final CoverageRepository coverageRepository;
 	private final RegionTargetRepository targetRepository;
 	private final UserSettingsRepository settingsRepository;
+	private final RegionRepository regionRepository;
 
 	public CoverageService(CoverageRepository coverageRepository, RegionTargetRepository targetRepository,
-			UserSettingsRepository settingsRepository) {
+			UserSettingsRepository settingsRepository, RegionRepository regionRepository) {
 		this.coverageRepository = coverageRepository;
 		this.targetRepository = targetRepository;
 		this.settingsRepository = settingsRepository;
+		this.regionRepository = regionRepository;
 	}
 
 	/** The week containing {@code date}; null means today in the user's timezone. */
@@ -61,6 +65,7 @@ public class CoverageService {
 		LocalDate monday = WeekMath.weekStart(date != null ? date : now.atZone(zone).toLocalDate());
 
 		CoverageResult coverage = coverage(userId, monday, zone, Set.of());
+		List<Badge> badges = Badges.forWeek(coverage.regions(), groupByRegion());
 		Set<String> recovering = recoveringRegions(userId, now);
 		List<Instant> sessionStarts = coverageRepository.findFinishedStartTimes(userId, WeekMath.startOf(monday, zone),
 			WeekMath.startOf(monday.plusWeeks(1), zone));
@@ -69,7 +74,7 @@ public class CoverageService {
 		List<RegionCoverageResponse> regions = coverage.regions().stream()
 			.map(region -> toResponse(region, recovering.contains(region.regionId())))
 			.toList();
-		return new CoverageWeekResponse(monday, monday.plusDays(6), coverage.weekPercent(), days, regions);
+		return new CoverageWeekResponse(monday, monday.plusDays(6), coverage.weekPercent(), days, regions, badges);
 	}
 
 	/** The current week's coverage (targets and effective sets per region), in the user's timezone. */
@@ -86,13 +91,14 @@ public class CoverageService {
 	}
 
 	/**
-	 * The weekPercent of the week (in the user's timezone) that contains {@code moment}, with the given
-	 * sets left out. Leaving out one workout's sets shows what the week looked like without it.
+	 * The coverage and badges of the week (in the user's timezone) that contains {@code moment}, with the
+	 * given sets left out. Leaving out one workout's sets shows what the week looked like without it.
 	 */
 	@Transactional(readOnly = true)
-	public int weekPercent(UUID userId, Instant moment, Set<UUID> leftOutSetIds) {
+	public WeekCoverage weekCoverage(UUID userId, Instant moment, Set<UUID> leftOutSetIds) {
 		ZoneId zone = userTimezone(userId);
-		return coverage(userId, WeekMath.weekStart(moment, zone), zone, leftOutSetIds).weekPercent();
+		CoverageResult coverage = coverage(userId, WeekMath.weekStart(moment, zone), zone, leftOutSetIds);
+		return new WeekCoverage(coverage, Badges.forWeek(coverage.regions(), groupByRegion()));
 	}
 
 	/** Coverage of the week starting on {@code monday}, counting every counted set except the left-out ones. */
@@ -110,6 +116,15 @@ public class CoverageService {
 			throw new BadRequestException("Invalid input",
 				Map.of("date", "its week must lie between 0001-01-01 and 9999-12-31"));
 		}
+	}
+
+	/** Region id to its muscle group, e.g. "lats_upper" to "back". */
+	private Map<String, String> groupByRegion() {
+		Map<String, String> groups = new HashMap<>();
+		for (Region region : regionRepository.findAll()) {
+			groups.put(region.getId(), region.getMuscleGroup());
+		}
+		return groups;
 	}
 
 	/** The user's weekly target per region, in region order. */
@@ -186,7 +201,7 @@ public class CoverageService {
 				contribution.sets()))
 			.toList();
 		return new RegionCoverageResponse(region.regionId(), region.effective(), region.target(), region.coverage(),
-			recovering, contributions);
+			region.state(), recovering, contributions);
 	}
 
 	/** "Mon" ... "Sun". Always English, whatever the server's language setting is. */

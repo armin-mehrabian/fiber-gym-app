@@ -62,6 +62,23 @@ class SessionExerciseTest {
 		assertThat(exercise.getSets()).isEmpty();
 	}
 
+	@Test
+	void oneTapAddsCompletedWorkingSetsAfterTheExistingOnes() {
+		SessionExercise exercise = newExercise();
+		WorkoutSet warmup = exercise.addSet(new BigDecimal("20"), 10, true, NOW);
+
+		exercise.addCompletedSets(new BigDecimal("60"), 10, 3, NOW);
+
+		assertThat(exercise.getSets()).first().isSameAs(warmup);
+		assertThat(exercise.getSets()).extracting(WorkoutSet::getSetNumber).containsExactly(1, 2, 3, 4);
+		assertThat(exercise.getSets().subList(1, 4)).allSatisfy(set -> {
+			assertThat(set.isCompleted()).isTrue();
+			assertThat(set.isWarmup()).isFalse();
+			assertThat(set.getWeightKg()).hasToString("60.00");
+			assertThat(set.getReps()).isEqualTo(10);
+		});
+	}
+
 	private static SessionExercise newExercise() {
 		WorkoutSession session = new WorkoutSession(UUID.randomUUID(), null, "Workout", NOW);
 		return session.addExercise("cable_fly", 3, 10, 15);

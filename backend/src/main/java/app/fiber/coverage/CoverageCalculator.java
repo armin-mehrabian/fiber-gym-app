@@ -5,9 +5,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Weekly coverage: how much of each region's weekly target the counted sets of one week fill.
@@ -17,6 +19,8 @@ import java.util.Map;
  *   and 0.5 to each region it helps (secondary).
  * - coverage = effective / target, capped at 1. A target of 0 means "ignore this region": coverage 0.
  * - weekPercent = the average coverage of all regions with a target above 0, as a whole percentage.
+ * - state: NOT_YET with no sets, STARTED below the target, DONE once the target is reached.
+ *   A target of 0 is always DONE: nothing is asked for that region.
  *
  * Pure Java, no Spring, no database: sets in, coverage out.
  */
@@ -86,7 +90,36 @@ public final class CoverageCalculator {
 	private static RegionCoverage regionCoverage(String regionId, int target, List<Contribution> contributions) {
 		double effective = contributions.stream().mapToDouble(Contribution::sets).sum();
 		return new RegionCoverage(regionId, round(effective, 1), target, round(coverage(effective, target), 2),
-			contributions);
+			state(effective, target), contributions);
+	}
+
+	/**
+	 * The region's state in words. Reaching the target exactly is DONE.
+	 * The target-0 check comes first, so a region the user ignores is DONE even with no sets.
+	 */
+	static RegionState state(double effective, int target) {
+		if (target <= 0 || effective >= target) {
+			return RegionState.DONE;
+		}
+		return effective > 0 ? RegionState.STARTED : RegionState.NOT_YET;
+	}
+
+	/**
+	 * The regions that became DONE: not DONE in {@code before}, DONE in {@code after}.
+	 * Listed in the order of {@code after} (region order). Used to show what one workout "lit up".
+	 */
+	public static List<String> regionsLit(List<RegionCoverage> before, List<RegionCoverage> after) {
+		Set<String> doneBefore = new HashSet<>();
+		for (RegionCoverage region : before) {
+			if (region.state() == RegionState.DONE) {
+				doneBefore.add(region.regionId());
+			}
+		}
+		return after.stream()
+			.filter(region -> region.state() == RegionState.DONE)
+			.map(RegionCoverage::regionId)
+			.filter(regionId -> !doneBefore.contains(regionId))
+			.toList();
 	}
 
 	/** effective / target, never above 1 (extra sets don't fill more than the whole region). Target 0 gives 0. */

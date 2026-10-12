@@ -89,6 +89,7 @@ class SummaryIntegrationTest {
 
 		// Week before Thursday: chest_upper 3, chest_mid 3 + 1 = 4 -> (0.5 + 0.667) / 2 = 58%.
 		// With it: chest_upper 5, chest_mid 4 + 2 + 1 = 7 (capped at 1) -> (0.833 + 1) / 2 = 92%.
+		// chest_mid reaches its 6 sets, so it is lit. chest_upper (5 of 6) is not done yet, so no badge.
 		assertThat(response.statusCode()).isEqualTo(200);
 		STRICT.assertIsMatch("""
 			{"sessionId": "%s", "name": "Workout", "durationMinutes": 46, "workingSets": 4,
@@ -97,7 +98,8 @@ class SummaryIntegrationTest {
 			 "weekPercentBefore": 58, "weekPercentAfter": 92,
 			 "personalBests": [
 			  {"exerciseId": "incline_barbell_press", "name": "Incline barbell press", "weightKg": 62.50, "reps": 10},
-			  {"exerciseId": "push_up", "name": "Push-up", "weightKg": 0.00, "reps": 16}]}""".formatted(thursday),
+			  {"exerciseId": "push_up", "name": "Push-up", "weightKg": 0.00, "reps": 16}],
+			 "regionsLit": ["chest_mid"], "badgesEarned": []}""".formatted(thursday),
 			response.body());
 
 		// Tuesday's summary: "before" is the week without Tuesday, so Thursday's sets still count there:
@@ -107,6 +109,38 @@ class SummaryIntegrationTest {
 		assertThat(JsonPath.<Integer>read(tuesdaySummary, "$.weekPercentBefore")).isEqualTo(42);
 		assertThat(JsonPath.<Integer>read(tuesdaySummary, "$.weekPercentAfter")).isEqualTo(92);
 		assertThat(JsonPath.<List<Object>>read(tuesdaySummary, "$.personalBests")).isEmpty();
+		// Without Tuesday, chest_mid has 3 of 6; with it, 7: Tuesday lit it too.
+		assertThat(JsonPath.<List<String>>read(tuesdaySummary, "$.regionsLit")).containsExactly("chest_mid");
+	}
+
+	@Test
+	void finishingAWholeMuscleGroupEarnsItsBadge() throws Exception {
+		// Chest: upper 2, mid 3, lower 0 (always done). Shoulders: front 2, side and rear 0. Lower lats 6.
+		// Every other target is 0, so arms, core and legs are done all week and are never "earned".
+		onlyTheseTargets(browser, Map.of("chest_upper", 2, "chest_mid", 3, "delt_front", 2, "lats_lower", 6));
+		// Monday: 2 sets of incline press -> chest_upper 2 (done), chest_mid 2, delt_front 1.
+		finishedLastWeek(0, "incline_barbell_press", "60", 10, 10);
+
+		// Wednesday, one tap: 2 push-ups -> chest_mid 4 (done), delt_front 2 (done).
+		String wednesday = startWorkout(browser);
+		addExercise(browser, wednesday, "push_up");
+		assertThat(browser.post("/api/sessions/" + wednesday + "/exercises/1/complete",
+			"{\"weightKg\": 0, \"reps\": 15, \"sets\": 2}").statusCode()).isEqualTo(200);
+		Instant start = at(lastMonday.plusDays(2), 9, 0);
+		finishAt(browser, jdbcTemplate, wednesday, start, start.plus(Duration.ofHours(1)));
+
+		String json = browser.get("/api/sessions/" + wednesday + "/summary").body();
+
+		assertThat(JsonPath.<Integer>read(json, "$.workingSets")).isEqualTo(2);
+		// Region order: chest_mid comes before delt_front. chest_upper was already done on Monday.
+		assertThat(JsonPath.<List<String>>read(json, "$.regionsLit")).containsExactly("chest_mid", "delt_front");
+		// Badge order: chest, then shoulders. Back (lower lats 0 of 6) stays open.
+		assertThat(JsonPath.<List<String>>read(json, "$.badgesEarned")).containsExactly("chest", "shoulders");
+
+		// The week now shows both badges as done.
+		String week = browser.get("/api/coverage/week?date=" + lastMonday).body();
+		assertThat(JsonPath.<List<String>>read(week, "$.badges[?(@.done == true)].group"))
+			.containsExactly("chest", "shoulders", "arms", "core", "legs");
 	}
 
 	@Test
@@ -149,6 +183,8 @@ class SummaryIntegrationTest {
 			.isEqualTo(JsonPath.<Integer>read(json, "$.weekPercentAfter"));
 		assertThat(JsonPath.<List<Object>>read(json, "$.personalBests")).isEmpty();
 		assertThat(JsonPath.<Integer>read(json, "$.durationMinutes")).isZero();
+		assertThat(JsonPath.<List<String>>read(json, "$.regionsLit")).isEmpty();
+		assertThat(JsonPath.<List<String>>read(json, "$.badgesEarned")).isEmpty();
 	}
 
 	@Test

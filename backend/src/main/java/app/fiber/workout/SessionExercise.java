@@ -96,6 +96,13 @@ public class SessionExercise {
 		return set;
 	}
 
+	/** Appends {@code count} working sets (not warm-ups) that are already completed, e.g. 3 x 60 kg x 10. */
+	public void addCompletedSets(BigDecimal weightKg, int reps, int count, Instant now) {
+		for (int i = 0; i < count; i++) {
+			addSet(weightKg, reps, false, now).setCompleted(true);
+		}
+	}
+
 	/** Removes the set and numbers the remaining ones 1..n again, keeping their order. */
 	public void removeSet(WorkoutSet set) {
 		sets.remove(set);

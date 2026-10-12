@@ -276,6 +276,103 @@ class CoverageCalculatorTest {
 		assertThat(CoverageCalculator.creditFor(RegionRole.SECONDARY)).isEqualTo(0.5);
 	}
 
+	// ---- region states ----
+
+	@Test
+	void noSetsIsNotYet() {
+		assertThat(CoverageCalculator.state(0, 6)).isEqualTo(RegionState.NOT_YET);
+	}
+
+	@Test
+	void anySetBelowTheTargetIsStarted() {
+		assertThat(CoverageCalculator.state(0.5, 6)).isEqualTo(RegionState.STARTED);
+		assertThat(CoverageCalculator.state(5.5, 6)).isEqualTo(RegionState.STARTED);
+	}
+
+	@Test
+	void reachingTheTargetExactlyIsDone() {
+		assertThat(CoverageCalculator.state(6, 6)).isEqualTo(RegionState.DONE);
+		assertThat(CoverageCalculator.state(4, 4)).isEqualTo(RegionState.DONE);
+	}
+
+	@Test
+	void goingPastTheTargetIsStillDone() {
+		assertThat(CoverageCalculator.state(9.5, 6)).isEqualTo(RegionState.DONE);
+	}
+
+	@Test
+	void aTargetOf0IsAlwaysDone() {
+		assertThat(CoverageCalculator.state(0, 0)).isEqualTo(RegionState.DONE);
+		assertThat(CoverageCalculator.state(1.5, 0)).isEqualTo(RegionState.DONE);
+	}
+
+	@Test
+	void theResultHasAStateForEveryRegion() {
+		// 4 push-ups: chest_mid 4 of 4 (done), delt_front 4 x 0.5 = 2 of 4 (started),
+		// calves nothing (not yet), lats_lower target 0 (done).
+		CoverageResult result = CoverageCalculator.calculate(
+			targets("chest_mid", 4, "delt_front", 4, "calves", 6, "lats_lower", 0),
+			times(4, set("Push-up", TUE, List.of("chest_mid"), List.of("delt_front"))));
+
+		assertThat(result.regions()).extracting(RegionCoverage::state).containsExactly(
+			RegionState.DONE, RegionState.STARTED, RegionState.NOT_YET, RegionState.DONE);
+	}
+
+	// ---- regions lit by one workout ----
+
+	@Test
+	void aRegionThatBecomesDoneIsLit() {
+		List<RegionCoverage> before = List.of(regionIn("chest_upper", RegionState.STARTED),
+			regionIn("chest_mid", RegionState.NOT_YET), regionIn("calves", RegionState.STARTED));
+		List<RegionCoverage> after = List.of(regionIn("chest_upper", RegionState.DONE),
+			regionIn("chest_mid", RegionState.DONE), regionIn("calves", RegionState.STARTED));
+
+		assertThat(CoverageCalculator.regionsLit(before, after)).containsExactly("chest_upper", "chest_mid");
+	}
+
+	@Test
+	void aRegionThatWasAlreadyDoneIsNotLitAgain() {
+		List<RegionCoverage> before = List.of(regionIn("chest_mid", RegionState.DONE),
+			regionIn("calves", RegionState.DONE));
+		List<RegionCoverage> after = List.of(regionIn("chest_mid", RegionState.DONE),
+			regionIn("calves", RegionState.DONE));
+
+		assertThat(CoverageCalculator.regionsLit(before, after)).isEmpty();
+	}
+
+	@Test
+	void litRegionsFollowTheRegionOrderOfTheAfterList() {
+		List<RegionCoverage> before = List.of(regionIn("calves", RegionState.NOT_YET),
+			regionIn("chest_upper", RegionState.NOT_YET));
+		List<RegionCoverage> after = List.of(regionIn("chest_upper", RegionState.DONE),
+			regionIn("calves", RegionState.DONE));
+
+		assertThat(CoverageCalculator.regionsLit(before, after)).containsExactly("chest_upper", "calves");
+	}
+
+	@Test
+	void litRegionsComeFromRealCoverageBeforeAndAfterAWorkout() {
+		Map<String, Integer> targets = targets("chest_upper", 3, "chest_mid", 4, "delt_front", 4);
+		List<CountedSet> earlier = times(2, set("Incline press", MON, List.of("chest_upper", "chest_mid"),
+			List.of("delt_front")));
+		List<CountedSet> workout = times(1, set("Incline press", THU, List.of("chest_upper", "chest_mid"),
+			List.of("delt_front")));
+		List<CountedSet> all = new ArrayList<>(earlier);
+		all.addAll(workout);
+
+		// chest_upper: 2 -> 3 of 3 (lit). chest_mid: 2 -> 3 of 4 (still started). delt_front: 1 -> 1.5 of 4.
+		assertThat(CoverageCalculator.regionsLit(CoverageCalculator.calculate(targets, earlier).regions(),
+			CoverageCalculator.calculate(targets, all).regions())).containsExactly("chest_upper");
+	}
+
+	@Test
+	void nothingIsLitWhenNothingChanged() {
+		CoverageResult week = CoverageCalculator.calculate(targets("chest_mid", 0, "calves", 6), List.of());
+
+		// chest_mid has target 0: DONE both before and after, so it is never "lit".
+		assertThat(CoverageCalculator.regionsLit(week.regions(), week.regions())).isEmpty();
+	}
+
 	// ---- helpers ----
 
 	private static CountedSet set(String exercise, LocalDate day, List<String> primary, List<String> secondary) {
@@ -293,6 +390,11 @@ class CoverageCalculatorTest {
 			targets.put((String) regionAndTarget[i], (Integer) regionAndTarget[i + 1]);
 		}
 		return targets;
+	}
+
+	/** A region with only a state, for the before/after comparisons. */
+	private static RegionCoverage regionIn(String regionId, RegionState state) {
+		return new RegionCoverage(regionId, 0, 6, 0, state, List.of());
 	}
 
 	private static RegionCoverage region(CoverageResult result, String regionId) {

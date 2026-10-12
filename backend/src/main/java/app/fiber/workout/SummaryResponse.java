@@ -8,6 +8,8 @@ import java.util.UUID;
  * GET /api/sessions/{id}/summary: what a finished workout did.
  * regionsHit = region id to 1 (hit mainly) or 0.5 (helped), for exercises with at least one working set.
  * weekPercentBefore / weekPercentAfter = that week's coverage without and with this workout (0-100).
+ * regionsLit = regions that were not done that week without this workout and are done with it (region order).
+ * badgesEarned = muscle groups (e.g. "chest") whose badge this workout completed, in badge order.
  */
 public record SummaryResponse(
 	UUID sessionId,
@@ -17,5 +19,7 @@ public record SummaryResponse(
 	Map<String, Double> regionsHit,
 	int weekPercentBefore,
 	int weekPercentAfter,
-	List<PersonalBestResponse> personalBests) {
+	List<PersonalBestResponse> personalBests,
+	List<String> regionsLit,
+	List<String> badgesEarned) {
 }

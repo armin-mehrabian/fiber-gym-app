@@ -5,7 +5,10 @@ import app.fiber.catalog.ExerciseRepository;
 import app.fiber.catalog.RegionRole;
 import app.fiber.common.ConflictException;
 import app.fiber.common.NotFoundException;
+import app.fiber.coverage.Badges;
+import app.fiber.coverage.CoverageCalculator;
 import app.fiber.coverage.CoverageService;
+import app.fiber.coverage.WeekCoverage;
 import app.fiber.progression.LoggedSet;
 import app.fiber.progression.PersonalBests;
 import java.time.Duration;
@@ -24,7 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The summary shown after finishing a workout: how long it took, how many working sets, which
- * regions it hit, how the week's coverage changed, and any new personal bests.
+ * regions it hit, how the week's coverage changed (percent, regions that became done, badges
+ * earned), and any new personal bests.
  *
  * Only working sets count here: completed and not warm-ups.
  */
@@ -64,13 +68,15 @@ public class SummaryService {
 			.flatMap(exercise -> exercise.getSets().stream())
 			.map(WorkoutSet::getId)
 			.collect(Collectors.toSet());
-		int before = coverageService.weekPercent(userId, session.getStartedAt(), ownSetIds);
-		int after = coverageService.weekPercent(userId, session.getStartedAt(), Set.of());
+		WeekCoverage before = coverageService.weekCoverage(userId, session.getStartedAt(), ownSetIds);
+		WeekCoverage after = coverageService.weekCoverage(userId, session.getStartedAt(), Set.of());
 
 		return new SummaryResponse(session.getId(), session.getName(),
 			durationMinutes(session.getStartedAt(), session.getFinishedAt()), workingSetCount,
-			regionsHit(library.values()), before, after,
-			personalBests(userId, session.getStartedAt(), workingSets, library));
+			regionsHit(library.values()), before.coverage().weekPercent(), after.coverage().weekPercent(),
+			personalBests(userId, session.getStartedAt(), workingSets, library),
+			CoverageCalculator.regionsLit(before.coverage().regions(), after.coverage().regions()),
+			Badges.earned(before.badges(), after.badges()));
 	}
 
 	/** Finish time minus start time, rounded to whole minutes (30 seconds and up rounds up). */

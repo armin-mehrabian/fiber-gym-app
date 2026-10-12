@@ -79,7 +79,7 @@ class CoverageIntegrationTest {
 		assertThat(response.statusCode()).isEqualTo(200);
 		String json = response.body();
 		assertThat(JsonPath.<Map<String, Object>>read(json, "$")).containsOnlyKeys("weekStart", "weekEnd",
-			"weekPercent", "days", "regions");
+			"weekPercent", "days", "regions", "badges");
 		assertThat(JsonPath.<String>read(json, "$.weekStart")).isEqualTo(monday.toString());
 		assertThat(JsonPath.<String>read(json, "$.weekEnd")).isEqualTo(monday.plusDays(6).toString());
 		assertThat(sessionsPerDay(json)).containsExactly(0, 1, 0, 1, 0, 0, 0);
@@ -90,7 +90,7 @@ class CoverageIntegrationTest {
 			.isEqualTo(JsonPath.<List<String>>read(browser.get("/api/targets").body(), "$[*].regionId"))
 			.hasSize(26);
 		assertThat(region(json, "chest_upper")).containsOnlyKeys("regionId", "effective", "target", "coverage",
-			"recovering", "contributions");
+			"state", "recovering", "contributions");
 
 		// 3 + 2 sets of incline press; 5 of 6 = 0.83.
 		assertRegion(json, "chest_upper", 5.0, 6, 0.83);
@@ -119,6 +119,23 @@ class CoverageIntegrationTest {
 
 		// (5/6 + 1 + 0.875 + 0.5) / 4 regions with a target = 80%
 		assertThat(JsonPath.<Integer>read(json, "$.weekPercent")).isEqualTo(80);
+
+		// States in words: 7 of 6 is done, anything between 0 and the target is started,
+		// and a target of 0 is always done (with or without sets).
+		assertThat(state(json, "chest_mid")).isEqualTo("DONE");
+		assertThat(state(json, "chest_upper")).isEqualTo("STARTED");
+		assertThat(state(json, "delt_front")).isEqualTo("STARTED");
+		assertThat(state(json, "lats_lower")).isEqualTo("STARTED");
+		assertThat(state(json, "biceps_long")).isEqualTo("DONE");
+		assertThat(state(json, "calves")).isEqualTo("DONE");
+		// Badges: only the groups whose regions all have target 0 here (arms, core, legs) are done.
+		assertThat(JsonPath.<List<Map<String, Object>>>read(json, "$.badges")).containsExactly(
+			badge("chest", "Chest", false, 2, 3), // chest_mid done, chest_lower has target 0
+			badge("shoulders", "Shoulders", false, 2, 3),
+			badge("back", "Back", false, 4, 5),
+			badge("arms", "Arms", true, 5, 5),
+			badge("core", "Core", true, 3, 3),
+			badge("legs", "Legs", true, 7, 7));
 		// Those workouts are days ago, so nothing is recovering.
 		assertThat(recoveringRegions(json)).isEmpty();
 	}
@@ -155,6 +172,13 @@ class CoverageIntegrationTest {
 		assertThat(JsonPath.<List<Double>>read(json, "$.regions[*].coverage")).containsOnly(0.0);
 		assertThat(JsonPath.<List<Object>>read(json, "$.regions[*].contributions[*]")).isEmpty();
 		assertThat(recoveringRegions(json)).isEmpty();
+		// Default targets are all above 0, so nothing is done yet and no badge is earned.
+		assertThat(JsonPath.<List<String>>read(json, "$.regions[*].state")).hasSize(26).containsOnly("NOT_YET");
+		assertThat(JsonPath.<List<String>>read(json, "$.badges[*].group"))
+			.containsExactly("chest", "shoulders", "back", "arms", "core", "legs");
+		assertThat(JsonPath.<List<Boolean>>read(json, "$.badges[*].done")).containsOnly(false);
+		assertThat(JsonPath.<List<Integer>>read(json, "$.badges[*].regionsDone")).containsOnly(0);
+		assertThat(JsonPath.<List<Integer>>read(json, "$.badges[*].regionsTotal")).containsExactly(3, 3, 5, 5, 3, 7);
 	}
 
 	@Test
@@ -423,6 +447,16 @@ class CoverageIntegrationTest {
 
 	private static Map<String, Object> contribution(String exerciseName, String day, double sets) {
 		return Map.of("exerciseName", exerciseName, "day", day, "sets", sets);
+	}
+
+	private static String state(String json, String regionId) {
+		return (String) region(json, regionId).get("state");
+	}
+
+	private static Map<String, Object> badge(String group, String name, boolean done, int regionsDone,
+			int regionsTotal) {
+		return Map.of("group", group, "name", name, "done", done, "regionsDone", regionsDone,
+			"regionsTotal", regionsTotal);
 	}
 
 	private static Set<String> recoveringRegions(String json) {

@@ -14,6 +14,7 @@ import app.fiber.common.ConflictException;
 import app.fiber.settings.SplitDay;
 import app.fiber.settings.SplitDayRepository;
 import app.fiber.settings.UserSettingsRepository;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.List;
@@ -108,6 +109,21 @@ class WorkoutServiceTest {
 			.isInstanceOf(ConflictException.class)
 			.hasMessage("This workout is finished");
 		assertThat(session.getFinishedAt()).isEqualTo(Instant.parse("2026-10-05T11:00:00Z")); // unchanged
+	}
+
+	@Test
+	void oneTapOnAFinishedWorkoutIs409AndAddsNothing() {
+		UUID sessionId = UUID.randomUUID();
+		WorkoutSession session = new WorkoutSession(USER, null, "Workout", Instant.parse("2026-10-05T10:00:00Z"));
+		SessionExercise exercise = session.addExercise("push_up", 3, 8, 20);
+		session.finish(Instant.parse("2026-10-05T11:00:00Z"));
+		when(sessionRepository.findByIdAndUserIdForUpdate(sessionId, USER)).thenReturn(Optional.of(session));
+
+		assertThatThrownBy(() -> service.completeExercise(USER, sessionId, 1,
+				new CompleteExerciseRequest(BigDecimal.ZERO, 15, 3)))
+			.isInstanceOf(ConflictException.class)
+			.hasMessage("This workout is finished");
+		assertThat(exercise.getSets()).isEmpty();
 	}
 
 	/** The exception Spring throws when Hibernate reports a broken database constraint with this name. */

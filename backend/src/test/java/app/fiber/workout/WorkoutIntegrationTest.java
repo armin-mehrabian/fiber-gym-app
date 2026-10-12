@@ -299,6 +299,20 @@ class WorkoutIntegrationTest {
 	}
 
 	@Test
+	void oneTapCompletesAtTheSameMomentGetNumbers1To6() throws Exception {
+		String id = startSession();
+		addExercise(id, "cable_fly");
+
+		// A double tap on DONE: both taps are logged, one after the other, never mixed up.
+		List<HttpResponse<String>> responses = atTheSameMoment(2, () -> browser.post(
+			"/api/sessions/" + id + "/exercises/1/complete", "{\"weightKg\": 10, \"reps\": 12, \"sets\": 3}"));
+
+		assertThat(responses).extracting(HttpResponse::statusCode).containsOnly(200);
+		assertThat(JsonPath.<List<Integer>>read(browser.get("/api/sessions/" + id).body(),
+			"$.exercises[0].sets[*].setNumber")).containsExactly(1, 2, 3, 4, 5, 6);
+	}
+
+	@Test
 	void exercisesAddedAtTheSameMomentGetPositions1To5() throws Exception {
 		String id = startSession();
 
