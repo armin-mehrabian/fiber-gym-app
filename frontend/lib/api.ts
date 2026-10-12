@@ -9,6 +9,7 @@ import type {
   Alternative,
   ApiError,
   ApiResult,
+  CompleteValues,
   Equipment,
   Exercise,
   ExerciseDetail,
@@ -127,6 +128,11 @@ export function getHistory(weeks = 12): Promise<HistoryWeek[]> {
 // This week's coverage per region (the backend picks the week in the user's timezone).
 export function getWeekCoverage(): Promise<WeekCoverage> {
   return serverGetJson<WeekCoverage>("/api/coverage/week");
+}
+
+// The whole catalog, retired exercises included (a workout can still hold one).
+export function getAllExercises(): Promise<Exercise[]> {
+  return serverGetJson<Exercise[]>("/api/exercises?all=true");
 }
 
 // Exercises the user's equipment allows, optionally filtered by name.
@@ -309,6 +315,12 @@ export function addSet(sessionId: string, position: number, values: SetValues): 
 // Only the fields that are sent change.
 export function updateSet(setId: string, changes: SetChanges): Promise<ApiResult<WorkoutSet>> {
   return send<WorkoutSet>("PATCH", `/api/sets/${setId}`, changes);
+}
+
+// One tap logs a whole exercise: `sets` finished working sets with the same weight and reps,
+// added after any sets it already has. The reply is the whole workout.
+export function completeExercise(sessionId: string, position: number, values: CompleteValues): Promise<ApiResult<Session>> {
+  return send<Session>("POST", `/api/sessions/${sessionId}/exercises/${position}/complete`, values);
 }
 
 // The backend renumbers the remaining sets of that exercise 1..n.

@@ -7,9 +7,15 @@ export function summaryTitle(name: string): string {
   return `${name} · Done`;
 }
 
-// "Week 41% → 58%"
-export function weekChangeText(before: number, after: number): string {
-  return `Week ${before}% → ${after}%`;
+// "Lit up: Upper chest · Front delts": the regions this workout finished for the week, in the order
+// given (the backend sends region order). " · " separates them because some region names contain a
+// comma ("Biceps, long head"). Unknown ids show as they are. With none it's still a
+// good day: the regions were already done, so the workout kept them that way.
+export function litLine(regionsLit: string[], names: Map<string, string>): string {
+  if (regionsLit.length === 0) {
+    return "Kept the lights on";
+  }
+  return `Lit up: ${regionsLit.map((id) => names.get(id) ?? id).join(" · ")}`;
 }
 
 // "New best · Bench press · 82.5 × 6", in the user's units (bodyweight shows 0).

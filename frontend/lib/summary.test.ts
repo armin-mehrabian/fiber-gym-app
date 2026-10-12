@@ -1,14 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { personalBestText, summaryTitle, weekChangeText } from "./summary";
+import { litLine, personalBestText, summaryTitle } from "./summary";
 
 describe("summary lines", () => {
   it("writes the title", () => {
     expect(summaryTitle("Pull")).toBe("Pull · Done");
   });
 
-  it("writes the week change", () => {
-    expect(weekChangeText(41, 58)).toBe("Week 41% → 58%");
-    expect(weekChangeText(0, 0)).toBe("Week 0% → 0%");
+  it("names the regions that lit up, in the order given", () => {
+    const names = new Map([
+      ["chest_upper", "Upper chest"],
+      ["delt_front", "Front delts"],
+    ]);
+    expect(litLine(["chest_upper", "delt_front"], names)).toBe("Lit up: Upper chest · Front delts");
+    expect(litLine(["unknown_region"], names)).toBe("Lit up: unknown_region");
+  });
+
+  it("keeps the lights on when nothing new lit up", () => {
+    expect(litLine([], new Map())).toBe("Kept the lights on");
   });
 
   it("writes a personal best in the user's units", () => {

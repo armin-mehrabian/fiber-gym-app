@@ -107,7 +107,7 @@ export default function SettingsForm({ initialSettings, equipment }: SettingsFor
         data-testid="settings-targets-link"
         className="flex min-h-[58px] items-center justify-between border-y border-line font-bold"
       >
-        Weekly targets
+        Advanced: weekly targets
         <span aria-hidden="true" className="text-2xl text-mut">
           ›
         </span>

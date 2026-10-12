@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import BackLink from "@/components/BackLink";
 import { viewOf } from "@/components/figure/exercise";
-import { getActiveSession, getWeekCoverage } from "@/lib/api";
+import { getActiveSession, getAllExercises, getSettings, getWeekCoverage } from "@/lib/api";
 import { guardPage } from "@/lib/guard";
 import { planFromExercises, toRegionValues } from "@/lib/plan";
 import { hasCompletedSet } from "@/lib/workout";
@@ -19,11 +19,20 @@ export const instant = false;
 
 export default async function WorkoutPage() {
   await guardPage("/");
-  const [session, coverage] = await Promise.all([getActiveSession(), getWeekCoverage()]);
+  const [session, coverage, settings, catalog] = await Promise.all([
+    getActiveSession(),
+    getWeekCoverage(),
+    getSettings(), // for the user's units
+    // Workout rows don't say which equipment an exercise needs; the catalog does. Only used for a
+    // nicer default weight, so a failed request is not worth an error page.
+    getAllExercises().catch(() => []),
+  ]);
   // Nothing in progress (finished, discarded, or never started): Home offers START.
   if (!session) {
     redirect("/");
   }
+  // No equipment = bodyweight, so its plan starts at 0. Unknown: assume a bar.
+  const bodyweightIds = new Set(catalog.filter((item) => item.equipment.length === 0).map((item) => item.id));
   const week = toRegionValues(Object.fromEntries(coverage.regions.map((region) => [region.regionId, region.coverage])));
   const firstMainRegion = session.exercises[0]?.primary[0];
 
@@ -49,7 +58,13 @@ export default async function WorkoutPage() {
       {session.exercises.length > 0 && (
         <div className="grid">
           {session.exercises.map((exercise) => (
-            <ExerciseRow key={exercise.position} exercise={exercise} />
+            <ExerciseRow
+              key={exercise.position}
+              sessionId={session.id}
+              exercise={exercise}
+              units={settings.units}
+              bodyweight={bodyweightIds.has(exercise.exerciseId)}
+            />
           ))}
         </div>
       )}

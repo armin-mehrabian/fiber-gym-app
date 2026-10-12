@@ -158,12 +158,18 @@ export type Contribution = {
   sets: number; // effective sets it gave, e.g. 3 or 1.5
 };
 
+// Where a region stands this week, in words instead of numbers:
+// NOT_YET = nothing yet, STARTED = some sets but below its target, DONE = target reached
+// (a target of 0 counts as DONE, because nothing more is wanted).
+export type RegionState = "NOT_YET" | "STARTED" | "DONE";
+
 // One region's week: effective sets (primary = 1 per set, secondary = 0.5) against its target.
 export type RegionCoverage = {
   regionId: string;
   effective: number; // at most 1 decimal, e.g. 4.5
   target: number; // the user's weekly target
   coverage: number; // 0..1 (0 when the target is 0)
+  state: RegionState;
   recovering: boolean; // trained hard (3+ effective sets in one workout) in the last 48 hours
   contributions: Contribution[]; // sorted by day, then exercise name; empty when untrained
 };
@@ -174,13 +180,23 @@ export type CoverageDay = {
   sessions: number;
 };
 
+// One muscle group's badge: done once every region of the group is DONE this week.
+export type Badge = {
+  group: string; // e.g. "chest"
+  name: string; // e.g. "Chest"
+  done: boolean;
+  regionsDone: number;
+  regionsTotal: number;
+};
+
 // GET /api/coverage/week: one Monday–Sunday week in the user's timezone.
 export type WeekCoverage = {
   weekStart: string; // "YYYY-MM-DD", a Monday
   weekEnd: string; // "YYYY-MM-DD", the Sunday
-  weekPercent: number; // whole number 0–100
+  weekPercent: number; // whole number 0–100 (still sent, no longer shown)
   days: CoverageDay[]; // 7 entries, Monday first
   regions: RegionCoverage[]; // all regions, in region order
+  badges: Badge[]; // one per group: chest, shoulders, back, arms, core, legs
 };
 
 // One exercise of GET /api/recommendation/next.
@@ -249,9 +265,18 @@ export type SessionSummary = {
   durationMinutes: number;
   workingSets: number;
   regionsHit: Record<string, number>; // region id → 1 or 0.5
-  weekPercentBefore: number;
+  weekPercentBefore: number; // still sent, no longer shown
   weekPercentAfter: number;
   personalBests: PersonalBest[]; // empty when there were none
+  regionsLit: string[]; // regions this workout took from not done to DONE, in region order
+  badgesEarned: string[]; // groups whose badge this workout completed, e.g. ["chest"]
+};
+
+// Body of POST .../exercises/{position}/complete: log `sets` finished working sets in one go.
+export type CompleteValues = {
+  weightKg: number;
+  reps: number;
+  sets: number; // 1–10
 };
 
 // A failed request: the backend's { error, fields } reply plus the HTTP status.

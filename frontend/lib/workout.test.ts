@@ -5,12 +5,15 @@ import {
   firstSetStart,
   hasCompletedSet,
   isEdited,
+  isExerciseDone,
   nextSetValues,
+  planText,
+  plannedValues,
   removeDraft,
   setLabels,
   setsKey,
+  toCompleteValues,
   toDraft,
-  workingSetsDone,
 } from "./workout";
 
 const set = (setNumber: number, changes: Partial<WorkoutSet> = {}): WorkoutSet => ({
@@ -48,10 +51,16 @@ const session = (exercises: SessionExercise[]): Session => ({
   exercises,
 });
 
-describe("workingSetsDone", () => {
-  it("counts completed sets that aren't warm-ups", () => {
-    const sets = [set(1, { isWarmup: true, completed: true }), set(2, { completed: true }), set(3)];
-    expect(workingSetsDone(exercise(sets))).toBe(1);
+describe("isExerciseDone", () => {
+  it("is done once the working sets reach the target", () => {
+    const two = [set(1, { completed: true }), set(2, { completed: true })];
+    expect(isExerciseDone(exercise(two))).toBe(false);
+    expect(isExerciseDone(exercise([...two, set(3, { completed: true })]))).toBe(true);
+  });
+
+  it("doesn't count warm-ups or open sets", () => {
+    const sets = [set(1, { isWarmup: true, completed: true }), set(2, { completed: true }), set(3), set(4, { completed: true })];
+    expect(isExerciseDone(exercise(sets))).toBe(false);
   });
 });
 
@@ -132,6 +141,38 @@ describe("firstSetStart", () => {
   it("keeps a suggested 0 (bodyweight) instead of falling back to an empty bar", () => {
     const suggested = { ...exercise([]), suggestedWeightKg: 0, suggestedReps: 13 };
     expect(firstSetStart(suggested, "KG", false)).toEqual({ weight: 0, reps: 13 });
+  });
+});
+
+describe("plannedValues", () => {
+  it("uses the suggestion and the target sets", () => {
+    const suggested = { ...exercise([]), suggestedWeightKg: 60, suggestedReps: 8 };
+    expect(plannedValues(suggested, "KG", false)).toEqual({ weight: 60, reps: 8, sets: 3 });
+  });
+
+  it("falls back to an empty bar, or 0 for bodyweight, with reps at the top of the range", () => {
+    expect(plannedValues(exercise([]), "KG", false)).toEqual({ weight: 20, reps: 10, sets: 3 });
+    expect(plannedValues(exercise([]), "LB", false)).toEqual({ weight: 45, reps: 10, sets: 3 });
+    expect(plannedValues(exercise([]), "KG", true)).toEqual({ weight: 0, reps: 10, sets: 3 });
+  });
+});
+
+describe("planText", () => {
+  it("writes sets, reps and weight in the user's units", () => {
+    expect(planText({ weight: 60, reps: 10, sets: 3 }, "KG")).toBe("3 × 10 · 60 kg");
+    expect(planText({ weight: 62.5, reps: 8, sets: 4 }, "KG")).toBe("4 × 8 · 62.5 kg");
+    expect(planText({ weight: 135, reps: 10, sets: 3 }, "LB")).toBe("3 × 10 · 135 lb");
+  });
+
+  it("says bodyweight instead of 0", () => {
+    expect(planText({ weight: 0, reps: 12, sets: 3 }, "KG")).toBe("3 × 12 · Bodyweight");
+  });
+});
+
+describe("toCompleteValues", () => {
+  it("sends the weight in kg", () => {
+    expect(toCompleteValues({ weight: 60, reps: 10, sets: 3 }, "KG")).toEqual({ weightKg: 60, reps: 10, sets: 3 });
+    expect(toCompleteValues({ weight: 45, reps: 10, sets: 3 }, "LB")).toEqual({ weightKg: 20.41, reps: 10, sets: 3 });
   });
 });
 

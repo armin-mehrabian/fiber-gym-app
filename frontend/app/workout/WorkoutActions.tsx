@@ -61,7 +61,7 @@ export default function WorkoutActions({ sessionId, hasCompletedSet }: WorkoutAc
       <Link
         href="/workout/add"
         data-testid="add-exercise"
-        className="flex min-h-[52px] items-center justify-center border-[1.5px] border-edge font-bold"
+        className="flex min-h-[52px] items-center justify-center border-[1.5px] border-edge font-bold transition-transform duration-100 motion-safe:active:scale-[0.97]"
       >
         + Add exercise
       </Link>

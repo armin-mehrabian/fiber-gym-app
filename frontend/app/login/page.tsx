@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import BodyFigure from "@/components/figure/BodyFigure";
 import type { RegionValues } from "@/components/figure/BodyFigure";
+import Wordmark from "@/components/Wordmark";
 import { guardPage } from "@/lib/guard";
 import AuthForm from "./AuthForm";
 
@@ -35,7 +36,7 @@ export default async function LoginPage() {
       <div className="flex justify-center">
         <BodyFigure view="front" values={WELCOME_FIGURE} size="hero" height={220} />
       </div>
-      <h1 className="text-center font-display text-[4rem] leading-none text-acc">Fiber</h1>
+      <Wordmark size="huge" heading />
       <AuthForm />
     </div>
   );

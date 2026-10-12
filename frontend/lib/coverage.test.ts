@@ -1,40 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { contributionLine, formatSets, pickGaps, setsOfTarget, setsSlashTarget } from "./coverage";
-import type { Region, RegionCoverage } from "./types";
+import { badgeHint, contributionLine, fillsLine, pickStillDark, regionStateLabel } from "./coverage";
+import type { Region, RegionCoverage, RegionState } from "./types";
 
 // A region's week with only the fields a test cares about.
-function week(regionId: string, effective: number, target: number): RegionCoverage {
-  const coverage = target > 0 ? Math.min(1, effective / target) : 0;
-  return { regionId, effective, target, coverage, recovering: false, contributions: [] };
+function week(regionId: string, state: RegionState): RegionCoverage {
+  return { regionId, effective: 0, target: 6, coverage: 0, state, recovering: false, contributions: [] };
 }
 
-function region(id: string, view: Region["view"], order: number): Region {
-  return { id, name: id, group: "test", view, order };
+function region(id: string, view: Region["view"], order: number, name = id): Region {
+  return { id, name, group: "test", view, order };
 }
 
-describe("formatSets", () => {
-  it("drops a trailing .0 and keeps one decimal", () => {
-    expect(formatSets(3)).toBe("3");
-    expect(formatSets(4.5)).toBe("4.5");
-    expect(formatSets(0)).toBe("0");
-    expect(formatSets(2.9999999)).toBe("3");
+describe("regionStateLabel", () => {
+  it("writes each state in words", () => {
+    expect(regionStateLabel("DONE")).toBe("Done ✓");
+    expect(regionStateLabel("STARTED")).toBe("Started");
+    expect(regionStateLabel("NOT_YET")).toBe("Not yet");
   });
 });
 
-describe("info panel text", () => {
-  it("writes sets against the target", () => {
-    expect(setsOfTarget(week("delt_rear", 4.5, 6))).toBe("4.5 of 6");
-    expect(setsOfTarget(week("delt_rear", 6, 6))).toBe("6 of 6");
-    expect(setsSlashTarget(week("delt_rear", 1.5, 4))).toBe("1.5/4");
-  });
-
-  it("writes one contribution per line", () => {
-    expect(contributionLine({ exerciseName: "Face pull", day: "Tue", sets: 3 })).toBe("Face pull · Tue · 3");
-    expect(contributionLine({ exerciseName: "Row", day: "Wed", sets: 1.5 })).toBe("Row · Wed · 1.5");
+describe("contributionLine", () => {
+  it("names the exercise and day, without the sets", () => {
+    expect(contributionLine({ exerciseName: "Face pull", day: "Tue", sets: 3 })).toBe("Face pull · Tue");
+    expect(contributionLine({ exerciseName: "Row", day: "Wed", sets: 1.5 })).toBe("Row · Wed");
   });
 });
 
-describe("pickGaps", () => {
+describe("badgeHint", () => {
+  it("writes the parts done", () => {
+    const badge = { group: "chest", name: "Chest", done: false, regionsDone: 2, regionsTotal: 3 };
+    expect(badgeHint(badge)).toBe("2/3 parts");
+  });
+});
+
+describe("pickStillDark", () => {
   const catalog = [
     region("chest_upper", "front", 1),
     region("delt_side", "both", 2),
@@ -44,34 +43,56 @@ describe("pickGaps", () => {
   ];
 
   it("keeps only the current view, plus regions drawn on both sides", () => {
-    const coverage = [week("chest_upper", 0, 6), week("delt_side", 0, 6), week("lats_upper", 0, 6)];
-    expect(pickGaps(coverage, catalog, "front").map((r) => r.regionId)).toEqual(["chest_upper", "delt_side"]);
-    expect(pickGaps(coverage, catalog, "back").map((r) => r.regionId)).toEqual(["delt_side", "lats_upper"]);
+    const coverage = [week("chest_upper", "NOT_YET"), week("delt_side", "NOT_YET"), week("lats_upper", "NOT_YET")];
+    expect(pickStillDark(coverage, catalog, "front").map((r) => r.regionId)).toEqual(["chest_upper", "delt_side"]);
+    expect(pickStillDark(coverage, catalog, "back").map((r) => r.regionId)).toEqual(["delt_side", "lats_upper"]);
   });
 
-  it("sorts by lowest coverage and keeps region order on ties", () => {
+  it("skips started and done regions and keeps region order", () => {
     const coverage = [
-      week("chest_upper", 3, 6), // 0.5
-      week("delt_side", 0, 6), // 0
-      week("abs_upper", 0, 4), // 0
-      week("calves", 6, 6), // 1
+      week("chest_upper", "STARTED"),
+      week("delt_side", "NOT_YET"),
+      week("abs_upper", "DONE"),
+      week("calves", "NOT_YET"),
     ];
-    expect(pickGaps(coverage, catalog, "front").map((r) => r.regionId)).toEqual([
-      "delt_side",
-      "abs_upper",
-      "chest_upper",
-      "calves",
-    ]);
+    expect(pickStillDark(coverage, catalog, "front").map((r) => r.regionId)).toEqual(["delt_side", "calves"]);
   });
 
-  it("skips regions with a target of 0", () => {
-    const coverage = [week("chest_upper", 0, 0), week("abs_upper", 1, 4)];
-    expect(pickGaps(coverage, catalog, "front").map((r) => r.regionId)).toEqual(["abs_upper"]);
+  it("is empty when nothing on that side is dark", () => {
+    const coverage = [week("chest_upper", "DONE"), week("lats_upper", "NOT_YET")];
+    expect(pickStillDark(coverage, catalog, "front")).toEqual([]);
   });
 
-  it("returns at most the requested count without changing the input", () => {
-    const coverage = catalog.map((r) => week(r.id, 0, 6));
-    expect(pickGaps(coverage, catalog, "front", 2)).toHaveLength(2);
-    expect(coverage.map((r) => r.regionId)).toEqual(catalog.map((r) => r.id));
+  it("returns at most the requested count", () => {
+    const coverage = catalog.map((r) => week(r.id, "NOT_YET"));
+    expect(pickStillDark(coverage, catalog, "front", 2).map((r) => r.regionId)).toEqual(["chest_upper", "delt_side"]);
+  });
+});
+
+describe("fillsLine", () => {
+  // Deliberately not in region order, to show the line sorts by it.
+  const catalog = [
+    region("lats_lower", "back", 33, "Lower lats"),
+    region("delt_rear", "back", 22, "Rear delts"),
+    region("traps_mid", "back", 31, "Mid/lower traps"),
+    region("biceps_long", "front", 40, "Biceps, long head"),
+  ];
+
+  it("names up to 3 main regions in region order", () => {
+    const planned = { lats_lower: 1, delt_rear: 1, biceps_long: 1, traps_mid: 1 };
+    expect(fillsLine(planned, catalog)).toBe("Fills Rear delts · Mid/lower traps · Lower lats");
+  });
+
+  it("keeps names that contain a comma readable", () => {
+    expect(fillsLine({ biceps_long: 1, lats_lower: 1 }, catalog)).toBe("Fills Lower lats · Biceps, long head");
+  });
+
+  it("leaves out helping regions", () => {
+    expect(fillsLine({ lats_lower: 1, delt_rear: 0.5 }, catalog)).toBe("Fills Lower lats");
+  });
+
+  it("is null without a main region", () => {
+    expect(fillsLine({ delt_rear: 0.5 }, catalog)).toBeNull();
+    expect(fillsLine({}, catalog)).toBeNull();
   });
 });

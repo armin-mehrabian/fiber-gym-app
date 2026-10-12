@@ -1,11 +1,16 @@
 // Pure helpers for the workout and set-logging screens (no React, easy to test).
 import { suggestedDisplayWeight } from "@/lib/progress";
-import { firstSetWeight, toDisplayWeight, toKg } from "@/lib/units";
-import type { Session, SessionExercise, SetValues, Units, WorkoutSet } from "@/lib/types";
+import { firstSetWeight, formatWeight, toDisplayWeight, toKg } from "@/lib/units";
+import type { CompleteValues, Session, SessionExercise, SetValues, Units, WorkoutSet } from "@/lib/types";
 
-// "n" in the "n/target" of a workout row: finished working sets (warm-ups don't count).
-export function workingSetsDone(exercise: SessionExercise): number {
+// Finished working sets of an exercise (warm-ups don't count).
+function workingSetsDone(exercise: SessionExercise): number {
   return exercise.sets.filter((set) => set.completed && !set.isWarmup).length;
+}
+
+// A workout row is done once its finished working sets reach the target.
+export function isExerciseDone(exercise: SessionExercise): boolean {
+  return workingSetsDone(exercise) >= exercise.targetSets;
 }
 
 // Finishing a workout with nothing ticked off is probably a mistake, so the screen asks first.
@@ -69,6 +74,30 @@ export function firstSetStart(
       : firstSetWeight(units, bodyweight);
   const reps = exercise.suggestedReps ?? exercise.repRange[1];
   return { weight, reps };
+}
+
+// What one tap on ✓ DONE logs, with the weight in the user's units.
+export type PlannedValues = {
+  weight: number;
+  reps: number;
+  sets: number;
+};
+
+// The row's plan: the same start values as the set log (suggestion, else bodyweight 0 or an
+// empty bar, reps at the top of the range) and the exercise's target number of sets.
+export function plannedValues(exercise: SessionExercise, units: Units, bodyweight: boolean): PlannedValues {
+  return { ...firstSetStart(exercise, units, bodyweight), sets: exercise.targetSets };
+}
+
+// The plan as one line: "3 × 10 · 60 kg", or "3 × 12 · Bodyweight" when there's no weight.
+export function planText(values: PlannedValues, units: Units): string {
+  const load = values.weight === 0 ? "Bodyweight" : `${formatWeight(values.weight)} ${units.toLowerCase()}`;
+  return `${values.sets} × ${values.reps} · ${load}`;
+}
+
+// The request body for the one-tap log: the same values, with the weight in kg for the API.
+export function toCompleteValues(values: PlannedValues, units: Units): CompleteValues {
+  return { weightKg: toKg(values.weight, units), reps: values.reps, sets: values.sets };
 }
 
 // Values for a new set: a copy of the last row's on-screen values, or `start` for the first set.

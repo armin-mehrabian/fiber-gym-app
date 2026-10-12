@@ -1,6 +1,8 @@
+import Wordmark from "@/components/Wordmark";
 import { getActiveSession, getHistory, getRecommendation, getRegions, getSettings, getWeekCoverage } from "@/lib/api";
-import { formatWeekOf } from "@/lib/dates";
+import { fillsLine } from "@/lib/coverage";
 import { guardPage } from "@/lib/guard";
+import { toRegionValues } from "@/lib/plan";
 import { buildDayStrip, dateInZone } from "@/lib/week";
 import DayStrip from "./DayStrip";
 import NextUp from "./NextUp";
@@ -32,21 +34,22 @@ export default async function HomePage() {
 
   return (
     <div className="grid gap-6">
-      <header className="flex items-end justify-between gap-3">
-        <h1 className="font-display text-[1.4rem] leading-tight">{formatWeekOf(coverage.weekStart)}</h1>
-        <p className="grid justify-items-end">
-          <span className="font-display text-[1.6rem] leading-none text-acc">
-            <span data-testid="week-percent">{coverage.weekPercent}</span>%
-          </span>
-          <span className="text-[0.7rem] tracking-[0.12em] text-mut">Covered</span>
-        </p>
-      </header>
+      <Wordmark size="large" heading />
+      <div className="grid gap-2">
+        {recommendation && (
+          <NextUp recommendation={recommendation} fills={fillsLine(recommendation.planned, catalog)} />
+        )}
+        <StartWorkoutButton hasActive={active !== null} />
+      </div>
+      {/* The planned regions pulse on the figure only while NEXT UP is on screen. */}
+      <WeekFigure
+        coverage={coverage.regions}
+        badges={coverage.badges}
+        catalog={catalog}
+        plan={recommendation ? toRegionValues(recommendation.planned) : undefined}
+      />
       <DayStrip days={buildDayStrip(coverage.days, today)} />
-      <WeekFigure coverage={coverage.regions} catalog={catalog} />
-      {recommendation && <NextUp recommendation={recommendation} />}
-      <StartWorkoutButton hasActive={active !== null} />
       <WeekSessions sessions={weekSessions} timeZone={settings.timezone} />
     </div>
   );
 }
-

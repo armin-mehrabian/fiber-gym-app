@@ -4,21 +4,24 @@ import { useState } from "react";
 import Segmented from "@/components/Segmented";
 import BodyFigure, { type RegionValues } from "@/components/figure/BodyFigure";
 import type { RegionId, View } from "@/components/figure/shapes";
-import { pickGaps } from "@/lib/coverage";
-import type { Region, RegionCoverage } from "@/lib/types";
-import GapsBoard from "./GapsBoard";
+import { pickStillDark } from "@/lib/coverage";
+import type { Badge, Region, RegionCoverage } from "@/lib/types";
+import Badges from "./Badges";
 import RegionInfo from "./RegionInfo";
+import StillDark from "./StillDark";
 
 const VIEWS: readonly View[] = ["front", "back"];
 
 type WeekFigureProps = {
   coverage: RegionCoverage[]; // this week, from the backend
+  badges: Badge[];
   catalog: Region[]; // names and which side each region is drawn on
+  plan?: RegionValues; // the next workout's regions (they pulse); left out while a workout is in progress
 };
 
-// The hero of Home: the body filled by this week's coverage, the gaps beside it,
-// and the details of whichever region is tapped.
-export default function WeekFigure({ coverage, catalog }: WeekFigureProps) {
+// The hero of Home: the body lit by this week's training, the group badges, the details of
+// whichever region is tapped, and what is still dark on the side being shown.
+export default function WeekFigure({ coverage, badges, catalog, plan }: WeekFigureProps) {
   const [view, setView] = useState<View>("front");
   const [selected, setSelected] = useState<RegionId | undefined>();
 
@@ -38,15 +41,22 @@ export default function WeekFigure({ coverage, catalog }: WeekFigureProps) {
   }
 
   return (
-    <section className="grid gap-3">
-      <div className="grid grid-cols-[auto_1fr] items-start gap-3">
-        <div className="grid justify-items-center gap-2.5">
-          <Segmented options={VIEWS} value={view} onChange={changeView} testIdPrefix="view-" label="Body view" />
-          <BodyFigure view={view} values={values} selected={selected} onSelect={toggleSelected} size="hero" />
-        </div>
-        <GapsBoard gaps={pickGaps(coverage, catalog, view)} names={names} />
+    <section className="grid gap-5">
+      <div className="grid justify-items-center gap-3">
+        <Segmented options={VIEWS} value={view} onChange={changeView} testIdPrefix="view-" label="Body view" />
+        <BodyFigure
+          view={view}
+          values={values}
+          plan={plan}
+          selected={selected}
+          onSelect={toggleSelected}
+          size="hero"
+          height={430}
+        />
       </div>
+      <Badges badges={badges} />
       <RegionInfo week={selectedWeek} name={selected ? (names.get(selected) ?? selected) : ""} />
+      <StillDark regions={pickStillDark(coverage, catalog, view)} names={names} />
     </section>
   );
 }

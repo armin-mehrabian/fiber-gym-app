@@ -40,6 +40,7 @@ export default function FigureHalf({ view, values, plan, selected, onSelect, min
             id={id}
             d={d}
             fill={fillFor(values[id] ?? 0)}
+            lit={(values[id] ?? 0) > 0}
             selected={id === selected}
             onSelect={onSelect}
             focusable={!mirrored}
@@ -61,9 +62,10 @@ export default function FigureHalf({ view, values, plan, selected, onSelect, min
         </g>
       )}
 
-      {/* 5. Today's plan: stripes (stronger for main regions) and a marching dashed outline. */}
+      {/* 5. Today's plan: stripes (stronger for main regions) and a marching dashed outline.
+          The whole layer also pulses softly. Both animations are skipped for people who ask for reduced motion. */}
       {planned.length > 0 && (
-        <g pointerEvents="none">
+        <g pointerEvents="none" className="motion-safe:animate-plan-pulse">
           {planned.map(({ id, d }) => (
             <path
               key={id}
@@ -74,7 +76,6 @@ export default function FigureHalf({ view, values, plan, selected, onSelect, min
               strokeWidth={mini ? 5 : 3.2}
               strokeDasharray="10 6"
               strokeLinejoin="round"
-              // The animation is skipped for people who ask for reduced motion.
               className="motion-safe:animate-march"
             />
           ))}
@@ -100,15 +101,19 @@ type RegionPathProps = {
   id: RegionId;
   d: string;
   fill: string;
+  lit: boolean; // has any fill at all: such regions fade in when the figure appears
   selected: boolean;
   onSelect?: (id: RegionId) => void;
   focusable: boolean;
 };
 
 // A single region. When the figure is tappable it also acts as a button for keyboard and screen reader users.
-function RegionPath({ id, d, fill, selected, onSelect, focusable }: RegionPathProps) {
+function RegionPath({ id, d, fill, lit, selected, onSelect, focusable }: RegionPathProps) {
   const name = <title>{REGION_NAMES[id]}</title>;
-  const fillClass = "transition-[fill] duration-300 motion-reduce:transition-none";
+  // A changed value blends to its new colour; a lit region also fades in when it first appears.
+  const fillClass = `transition-[fill] duration-[400ms] motion-reduce:transition-none ${
+    lit ? "motion-safe:animate-fill-in" : ""
+  }`;
 
   if (!onSelect) {
     return (

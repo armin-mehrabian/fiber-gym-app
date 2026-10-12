@@ -1,4 +1,4 @@
-import { contributionLine, setsOfTarget } from "@/lib/coverage";
+import { contributionLine, regionStateLabel } from "@/lib/coverage";
 import type { RegionCoverage } from "@/lib/types";
 
 type RegionInfoProps = {
@@ -6,7 +6,7 @@ type RegionInfoProps = {
   name: string;
 };
 
-// What's behind the tapped region: sets against the target, and which exercises gave them.
+// What's behind the tapped region, in words: done, started or not yet, and which exercises worked it.
 // The outer box is always there (aria-live), so screen readers announce each new selection.
 export default function RegionInfo({ week, name }: RegionInfoProps) {
   return (
@@ -16,12 +16,12 @@ export default function RegionInfo({ week, name }: RegionInfoProps) {
           <b data-testid="region-info-name" className="font-bold">
             {name}
           </b>
-          <span data-testid="region-info-sets" className="font-display text-acc">
-            {setsOfTarget(week)}
+          <span
+            data-testid="region-info-state"
+            className={`font-display ${week.state === "NOT_YET" ? "text-mut" : "text-acc"}`}
+          >
+            {regionStateLabel(week.state)}
           </span>
-          {week.contributions.length === 0 && (
-            <p className="col-span-2 text-[0.8rem] text-mut">Not trained yet this week</p>
-          )}
           {week.contributions.map((contribution, index) => (
             <p
               key={`${contribution.exerciseName}-${contribution.day}`}
